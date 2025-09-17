@@ -66,6 +66,14 @@ namespace PaymentsAPI.Services
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 return null;
 
+            // Sign in the user
+            await SignInUserAsync(user);
+
+            return MapToUserResponseDto(user);
+        }
+
+        private async Task SignInUserAsync(User user)
+        {
             // Create claims
             var claims = new List<Claim>
             {
@@ -92,8 +100,6 @@ namespace PaymentsAPI.Services
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
             }
-
-            return MapToUserResponseDto(user);
         }
 
         public async Task LogoutAsync()

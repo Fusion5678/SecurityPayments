@@ -61,12 +61,12 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+# dotenv environment variable files (commented out to allow # .env files in git)
+# # .env
+# # .env.development.local
+# # .env.test.local
+# # .env.production.local
+# # .env.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -163,7 +163,7 @@ pids
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+# .env
 
 # Storybook build outputs
 .out
@@ -181,10 +181,10 @@ temp/
 *.swo
 
 # Local development files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
 
 # Package manager lock files (uncomment if you want to ignore them)
 # package-lock.json
@@ -214,10 +214,10 @@ ehthumbs.db
 Desktop.ini
 
 # Local configuration files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
 
 # Debug logs
 npm-debug.log*
@@ -261,7 +261,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+# .env
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

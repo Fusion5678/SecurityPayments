@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // Create axios instance with secure configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:5001/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true, // Send cookies automatically for HttpOnly authentication
-  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000'), // Configurable timeout
+  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT), // Configurable timeout
   headers: {
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest', // CSRF protection

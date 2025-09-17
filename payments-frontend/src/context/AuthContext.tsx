@@ -83,7 +83,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }): Promise<void> => {
     try {
       const newUser = await authAPI.register(userData);
-      setUser(newUser);
+      // Registration successful - user is not automatically logged in
+      // They need to login separately
     } catch (error) {
       throw error;
     }

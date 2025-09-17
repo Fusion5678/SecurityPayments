@@ -1,4 +1,4 @@
-name: API CI/CD Pipeline
+name: SecurityPayments API CI/CD Pipeline
 
 on:
   push:
@@ -14,60 +14,105 @@ on:
 
 env:
   DOTNET_VERSION: '7.0.x'
+  AZURE_WEBAPP_NAME_PROD: 'myapp-api-prod'
+  AZURE_WEBAPP_PACKAGE_PATH: './PaymentsAPI'
 
 jobs:
-  # API Tests and Build
-  test-and-build:
-    name: Test and Build API
+  # -------------------------
+  # Build & Test Job
+  # -------------------------
+  build-and-test:
+    name: Build and Test API
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
         
-    - name: Restore dependencies
-      run: dotnet restore PaymentsAPI/PaymentsAPI.csproj
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
       
-    - name: Build project
-      run: dotnet build PaymentsAPI/PaymentsAPI.csproj --no-restore
+      - name: Build project
+        run: dotnet build ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-restore --configuration Release
       
-    - name: Run tests
-      run: dotnet test PaymentsAPI/PaymentsAPI.csproj --no-build --verbosity normal
+      - name: Run tests
+        run: dotnet test ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
       
-    - name: Publish API
-      run: dotnet publish PaymentsAPI/PaymentsAPI.csproj -c Release -o ./publish/api
+      - name: Publish API
+        run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration Release --output ./publish/api --no-build
       
-    - name: Upload API artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: api-artifacts
-        path: ./publish/api/
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-build-artifacts
+          path: ./publish/api/
+          retention-days: 1
 
-  # Deploy to Production
-  deploy-prod:
-    name: Deploy API to Production
+  # -------------------------
+  # Deploy to Azure (Production)
+  # -------------------------
+  deploy-production:
+    name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: test-and-build
+    needs: build-and-test
     if: github.ref == 'refs/heads/main'
+    environment: production
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-    - name: Download API artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: api-artifacts
-        path: ./publish/api/
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
         
-    - name: Deploy to Azure App Service (Production)
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ secrets.AZURE_APP_NAME_API_PROD }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_PROD }}
-        package: ./publish/api/
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-build-artifacts
+          path: ./publish/api/
+        
+      - name: Deploy to Azure App Service (Production)
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME_PROD }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_PROD }}
+          package: ./publish/api/
+        
+      - name: Update App Service Configuration
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME_PROD }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_PROD }}
+          app-settings-json: |
+            {
+              "ASPNETCORE_ENVIRONMENT": "Production",
+              "ConnectionStrings__DefaultConnection": "${{ secrets.SQL_CONNECTION_STRING }}"
+            }
+        
+      - name: Health Check
+        run: |
+          echo "Waiting for deployment to complete..."
+          sleep 30
+          echo "Testing API health endpoint..."
+          curl -f https://${{ env.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net/api/auth/csrf-token || exit 1
+          echo "API deployment successful!"
+        
+      - name: Notify Deployment Success
+        if: success()
+        run: |
+          echo "✅ SecurityPayments API successfully deployed to production!"
+          echo "🌐 API URL: https://${{ env.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net"
+          echo "📊 Swagger UI: https://${{ env.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net/swagger"
+        
+      - name: Notify Deployment Failure
+        if: failure()
+        run: |
+          echo "❌ SecurityPayments API deployment failed!"
+          echo "Please check the logs and try again."

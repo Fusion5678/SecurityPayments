@@ -20,26 +20,26 @@ builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
     {
         var authConfig = builder.Configuration.GetSection("Authentication:Cookie");
-        options.LoginPath = authConfig["LoginPath"] ?? "/api/auth/login";
-        options.LogoutPath = authConfig["LogoutPath"] ?? "/api/auth/logout";
-        options.AccessDeniedPath = authConfig["AccessDeniedPath"] ?? "/api/auth/access-denied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(int.Parse(authConfig["ExpireHours"] ?? "24"));
+        options.LoginPath = authConfig["LoginPath"];
+        options.LogoutPath = authConfig["LogoutPath"];
+        options.AccessDeniedPath = authConfig["AccessDeniedPath"];
+        options.ExpireTimeSpan = TimeSpan.FromHours(int.Parse(authConfig["ExpireHours"]));
         options.SlidingExpiration = true;
-        options.Cookie.HttpOnly = bool.Parse(authConfig["HttpOnly"] ?? "true");
+        options.Cookie.HttpOnly = bool.Parse(authConfig["HttpOnly"]);
         options.Cookie.SecurePolicy = authConfig["SecurePolicy"] switch
         {
             "Always" => CookieSecurePolicy.Always,
             "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
-            _ => CookieSecurePolicy.Always // default to Always for security
+            _ => CookieSecurePolicy.Always
         };
         options.Cookie.SameSite = authConfig["SameSite"] switch
         {
             "Strict" => SameSiteMode.Strict,
             "Lax" => SameSiteMode.Lax,
             "None" => SameSiteMode.None,
-            _ => builder.Environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict
+            _ => SameSiteMode.Strict
         };
-        options.Cookie.Name = authConfig["Name"] ?? "PaymentsAuth";
+        options.Cookie.Name = authConfig["Name"];
     });
 
 // Add Authorization
@@ -49,9 +49,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddAntiforgery(options =>
 {
     var csrfConfig = builder.Configuration.GetSection("CSRF");
-    options.HeaderName = csrfConfig["HeaderName"] ?? "X-CSRF-TOKEN";
-    options.Cookie.Name = csrfConfig["CookieName"] ?? "CSRF-TOKEN";
-    options.Cookie.HttpOnly = bool.Parse(csrfConfig["HttpOnly"] ?? "true");
+    options.HeaderName = csrfConfig["HeaderName"];
+    options.Cookie.Name = csrfConfig["CookieName"];
+    options.Cookie.HttpOnly = bool.Parse(csrfConfig["HttpOnly"]);
     options.Cookie.SecurePolicy = csrfConfig["SecurePolicy"] switch
     {
         "Always" => CookieSecurePolicy.Always,
@@ -63,7 +63,7 @@ builder.Services.AddAntiforgery(options =>
         "Strict" => SameSiteMode.Strict,
         "Lax" => SameSiteMode.Lax,
         "None" => SameSiteMode.None,
-        _ => builder.Environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict
+        _ => SameSiteMode.Strict
     };
 });
 
@@ -72,8 +72,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactFrontend", policy =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-            ?? new[] { "https://frontend-domain.azurewebsites.net" };
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
         
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
@@ -137,36 +136,23 @@ app.Use(async (context, next) =>
     // XSS protection (older browsers, harmless to include)
     context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
 
-    // HSTS (only when using HTTPS)
-    if (context.Request.IsHttps)
-    {
-        var hstsMaxAge = securityConfig["HstsMaxAge"] ?? "31536000";
-        var includeSubDomains = securityConfig["HstsIncludeSubDomains"] ?? "true";
-        var preload = securityConfig["HstsPreload"] ?? "true";
-        
-        var hstsValue = $"max-age={hstsMaxAge}";
-        if (includeSubDomains == "true") hstsValue += "; includeSubDomains";
-        if (preload == "true") hstsValue += "; preload";
-        
-        context.Response.Headers.Add("Strict-Transport-Security", hstsValue);
-    }
+    // Add HSTS (HTTP Strict Transport Security) header to enforce HTTPS and protect against protocol downgrade attacks
+    var hstsMaxAge = securityConfig["HstsMaxAge"];
+    var includeSubDomains = securityConfig["HstsIncludeSubDomains"];
+    var preload = securityConfig["HstsPreload"];
+
+    var hstsValue = $"max-age={hstsMaxAge}";
+    if (includeSubDomains == "true") hstsValue += "; includeSubDomains";
+    if (preload == "true") hstsValue += "; preload";
+
+    context.Response.Headers.Add("Strict-Transport-Security", hstsValue);   
 
     // Content Security Policy
-    var csp = securityConfig["ContentSecurityPolicy"] ?? 
-        "default-src 'self'; " +
-        "script-src 'self' 'nonce-{NONCE}'; " +
-        "style-src 'self' 'nonce-{NONCE}'; " +
-        "img-src 'self' data: https:; " +
-        "font-src 'self' data:; " +
-        "connect-src 'self'; " +
-        "frame-ancestors 'none'; " +
-        "base-uri 'self'; " +
-        "form-action 'self'";
-    
+    var csp = securityConfig["ContentSecurityPolicy"];
     context.Response.Headers.Add("Content-Security-Policy", csp);
 
     // Referrer policy
-    var referrerPolicy = securityConfig["ReferrerPolicy"] ?? "no-referrer";
+    var referrerPolicy = securityConfig["ReferrerPolicy"];
     context.Response.Headers.Add("Referrer-Policy", referrerPolicy);
 
     await next();
