@@ -74,17 +74,17 @@ const Notification: React.FC<NotificationProps> = ({
   };
 
   return (
-    <div className={`max-w-sm w-full border rounded-lg shadow-lg pointer-events-auto ${getStyles()}`}>
-      <div className="p-4">
+    <div className={`w-full border rounded-lg shadow-lg pointer-events-auto ${getStyles()}`}>
+      <div className="p-5">
         <div className="flex items-start">
           <div className="flex-shrink-0">
             {getIcon()}
           </div>
-          <div className="ml-3 w-0 flex-1">
-            <p className="text-sm font-medium">
+          <div className="ml-4 flex-1 min-w-0">
+            <p className="text-base font-semibold leading-5">
               {title}
             </p>
-            <p className="mt-1 text-sm opacity-90">
+            <p className="mt-2 text-sm leading-5 opacity-90">
               {message}
             </p>
           </div>

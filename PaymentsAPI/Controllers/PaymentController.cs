@@ -22,6 +22,7 @@ namespace PaymentsAPI.Controllers
         /// Create a new payment
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult<PaymentResponseDto>> CreatePayment([FromBody] PaymentCreateDto createDto)
         {
             try

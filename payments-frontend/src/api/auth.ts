@@ -13,10 +13,10 @@ export interface User {
 }
 
 export interface UserProfileUpdate {
-  fullName: string;
-  email: string;
-  idNumber?: string;
-  employeeNumber?: string;
+  FullName: string;
+  Email: string;
+  IDNumber?: string;
+  EmployeeNumber?: string;
 }
 
 export interface ChangePasswordRequest {

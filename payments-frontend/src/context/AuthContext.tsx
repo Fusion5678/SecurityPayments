@@ -38,7 +38,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(userData);
       } catch (error) {
         // User is not authenticated - this is normal for unauthenticated users
-        console.log('User not authenticated:', error);
+        if (error instanceof Error && error.message === 'Unauthorized') {
+          console.log('User not authenticated - this is normal');
+        } else {
+          console.error('Authentication check failed:', error);
+        }
         setUser(null);
       } finally {
         setLoading(false);

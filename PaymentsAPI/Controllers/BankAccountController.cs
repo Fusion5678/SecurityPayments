@@ -22,6 +22,7 @@ namespace PaymentsAPI.Controllers
         /// Create a new bank account for the current user
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult<BankAccountResponseDto>> CreateBankAccount([FromBody] BankAccountCreateDto createDto)
         {
             try

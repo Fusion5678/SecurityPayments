@@ -357,6 +357,11 @@ FodyWeavers.xsd
 *.userosscache
 *.sln.docstates
 
+# Sensitive configuration files
+appsettings.*.json
+!appsettings.json
+!appsettings.Production.json
+
 # Environment variables
 .env
 .env.local

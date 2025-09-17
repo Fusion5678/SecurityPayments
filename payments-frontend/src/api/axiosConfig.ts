@@ -2,22 +2,42 @@ import axios from 'axios';
 
 // Create axios instance with secure configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'https://localhost:5001/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:5001/api',
   withCredentials: true, // Send cookies automatically for HttpOnly authentication
-  timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || '10000'), // Configurable timeout
+  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000'), // Configurable timeout
   headers: {
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest', // CSRF protection
   },
 });
 
-// Request interceptor for logging and error handling
+// Request interceptor for logging, CSRF tokens, and error handling
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // Log requests in development
-    if (process.env.REACT_APP_ENABLE_DEBUG === 'true') {
+    if (import.meta.env.VITE_ENABLE_DEBUG === 'true') {
       console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     }
+
+    // Add CSRF token for state-changing requests (except for CSRF token requests)
+    if (config.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method.toUpperCase()) && 
+        !config.url?.includes('/auth/csrf-token')) {
+      try {
+        const csrfResponse = await api.get('/auth/csrf-token');
+        if (csrfResponse.data?.token) {
+          config.headers['X-CSRF-TOKEN'] = csrfResponse.data.token;
+          console.log('CSRF token added:', csrfResponse.data.token);
+        } else {
+          console.warn('CSRF token response missing token field');
+        }
+      } catch (error) {
+        console.error('Failed to get CSRF token:', error);
+        // For now, allow the request to proceed without CSRF token
+        // In production, you might want to throw an error here
+        console.warn('Proceeding without CSRF token');
+      }
+    }
+
     return config;
   },
   (error) => {
@@ -43,8 +63,8 @@ api.interceptors.response.use(
     
     switch (status) {
       case 401:
-        // Unauthorized - let React Router handle the redirect
-        console.warn('Unauthorized access');
+        // Unauthorized - this is expected for unauthenticated users
+        console.log('User not authenticated');
         throw new Error('Unauthorized');
       case 403:
         console.error('Forbidden access');

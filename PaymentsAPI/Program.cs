@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 // --------------------
 builder.Services.AddControllers();
+builder.Services.AddMvc();
 
 // Add Entity Framework
 builder.Services.AddDbContext<PaymentsDbContext>(options =>
@@ -25,42 +26,59 @@ builder.Services.AddAuthentication("Cookies")
         options.ExpireTimeSpan = TimeSpan.FromHours(int.Parse(authConfig["ExpireHours"] ?? "24"));
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = bool.Parse(authConfig["HttpOnly"] ?? "true");
-        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() 
-            ? CookieSecurePolicy.None 
-            : CookieSecurePolicy.Always; // enforce HTTPS in production
-        options.Cookie.SameSite = builder.Environment.IsDevelopment() 
-            ? SameSiteMode.Lax 
-            : SameSiteMode.None; // allows cross-site cookies with HTTPS in production
-        options.Cookie.Name = "PaymentsAuth"; // Set explicit cookie name
+        options.Cookie.SecurePolicy = authConfig["SecurePolicy"] switch
+        {
+            "Always" => CookieSecurePolicy.Always,
+            "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
+            _ => CookieSecurePolicy.Always // default to Always for security
+        };
+        options.Cookie.SameSite = authConfig["SameSite"] switch
+        {
+            "Strict" => SameSiteMode.Strict,
+            "Lax" => SameSiteMode.Lax,
+            "None" => SameSiteMode.None,
+            _ => builder.Environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict
+        };
+        options.Cookie.Name = authConfig["Name"] ?? "PaymentsAuth";
     });
 
 // Add Authorization
 builder.Services.AddAuthorization();
+
+// Add CSRF Protection
+builder.Services.AddAntiforgery(options =>
+{
+    var csrfConfig = builder.Configuration.GetSection("CSRF");
+    options.HeaderName = csrfConfig["HeaderName"] ?? "X-CSRF-TOKEN";
+    options.Cookie.Name = csrfConfig["CookieName"] ?? "CSRF-TOKEN";
+    options.Cookie.HttpOnly = bool.Parse(csrfConfig["HttpOnly"] ?? "true");
+    options.Cookie.SecurePolicy = csrfConfig["SecurePolicy"] switch
+    {
+        "Always" => CookieSecurePolicy.Always,
+        "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
+        _ => CookieSecurePolicy.Always
+    };
+    options.Cookie.SameSite = csrfConfig["SameSite"] switch
+    {
+        "Strict" => SameSiteMode.Strict,
+        "Lax" => SameSiteMode.Lax,
+        "None" => SameSiteMode.None,
+        _ => builder.Environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.Strict
+    };
+});
 
 // Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactFrontend", policy =>
     {
-        if (builder.Environment.IsDevelopment())
-        {
-            // Local development origins
-            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        }
-        else
-        {
-            // Production origins - configure these in Azure App Settings
-            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-                ?? new[] { "https://your-frontend-domain.azurewebsites.net" };
-            
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        }
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+            ?? new[] { "https://frontend-domain.azurewebsites.net" };
+        
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -105,26 +123,51 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Enforce HTTPS
+// Enforce HTTPS redirection
 app.UseHttpsRedirection();
 
 // Apply security headers globally
 app.Use(async (context, next) =>
 {
+    var securityConfig = app.Configuration.GetSection("Security");
+    
     // Prevent MIME sniffing
     context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
 
     // XSS protection (older browsers, harmless to include)
     context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
 
-    // HSTS (only effective if HTTPS is used)
-    context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+    // HSTS (only when using HTTPS)
+    if (context.Request.IsHttps)
+    {
+        var hstsMaxAge = securityConfig["HstsMaxAge"] ?? "31536000";
+        var includeSubDomains = securityConfig["HstsIncludeSubDomains"] ?? "true";
+        var preload = securityConfig["HstsPreload"] ?? "true";
+        
+        var hstsValue = $"max-age={hstsMaxAge}";
+        if (includeSubDomains == "true") hstsValue += "; includeSubDomains";
+        if (preload == "true") hstsValue += "; preload";
+        
+        context.Response.Headers.Add("Strict-Transport-Security", hstsValue);
+    }
 
-    // Content Security Policy (restrict scripts/styles to self)
-    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';");
+    // Content Security Policy
+    var csp = securityConfig["ContentSecurityPolicy"] ?? 
+        "default-src 'self'; " +
+        "script-src 'self' 'nonce-{NONCE}'; " +
+        "style-src 'self' 'nonce-{NONCE}'; " +
+        "img-src 'self' data: https:; " +
+        "font-src 'self' data:; " +
+        "connect-src 'self'; " +
+        "frame-ancestors 'none'; " +
+        "base-uri 'self'; " +
+        "form-action 'self'";
+    
+    context.Response.Headers.Add("Content-Security-Policy", csp);
 
     // Referrer policy
-    context.Response.Headers.Add("Referrer-Policy", "no-referrer");
+    var referrerPolicy = securityConfig["ReferrerPolicy"] ?? "no-referrer";
+    context.Response.Headers.Add("Referrer-Policy", referrerPolicy);
 
     await next();
 });

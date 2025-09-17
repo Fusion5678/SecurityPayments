@@ -12,10 +12,10 @@ const ProfilePage: React.FC = () => {
 
   // Profile form state
   const [profileForm, setProfileForm] = useState<UserProfileUpdate>({
-    fullName: '',
-    email: '',
-    idNumber: '',
-    employeeNumber: ''
+    FullName: '',
+    Email: '',
+    IDNumber: '',
+    EmployeeNumber: ''
   });
 
   // Password form state
@@ -29,10 +29,10 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (user) {
       setProfileForm({
-        fullName: user.fullName,
-        email: user.email,
-        idNumber: user.idNumber || '',
-        employeeNumber: user.employeeNumber || ''
+        FullName: user.fullName,
+        Email: user.email,
+        IDNumber: user.idNumber || '',
+        EmployeeNumber: user.employeeNumber || ''
       });
     }
   }, [user]);
@@ -108,10 +108,10 @@ const ProfilePage: React.FC = () => {
   const cancelEdit = () => {
     if (user) {
       setProfileForm({
-        fullName: user.fullName,
-        email: user.email,
-        idNumber: user.idNumber || '',
-        employeeNumber: user.employeeNumber || ''
+        FullName: user.fullName,
+        Email: user.email,
+        IDNumber: user.idNumber || '',
+        EmployeeNumber: user.employeeNumber || ''
       });
     }
     setIsEditing(false);
@@ -168,8 +168,8 @@ const ProfilePage: React.FC = () => {
                       <input
                         type="text"
                         id="fullName"
-                        name="fullName"
-                        value={profileForm.fullName}
+                        name="FullName"
+                        value={profileForm.FullName}
                         onChange={handleProfileChange}
                         required
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -183,8 +183,8 @@ const ProfilePage: React.FC = () => {
                       <input
                         type="email"
                         id="email"
-                        name="email"
-                        value={profileForm.email}
+                        name="Email"
+                        value={profileForm.Email}
                         onChange={handleProfileChange}
                         required
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -199,8 +199,8 @@ const ProfilePage: React.FC = () => {
                         <input
                           type="text"
                           id="idNumber"
-                          name="idNumber"
-                          value={profileForm.idNumber}
+                          name="IDNumber"
+                          value={profileForm.IDNumber}
                           onChange={handleProfileChange}
                           className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />
@@ -215,8 +215,8 @@ const ProfilePage: React.FC = () => {
                         <input
                           type="text"
                           id="employeeNumber"
-                          name="employeeNumber"
-                          value={profileForm.employeeNumber}
+                          name="EmployeeNumber"
+                          value={profileForm.EmployeeNumber}
                           onChange={handleProfileChange}
                           className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Antiforgery;
 using PaymentsAPI.DTOs;
 using PaymentsAPI.Services;
 using System.Security.Claims;
@@ -11,10 +12,12 @@ namespace PaymentsAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IAntiforgery _antiforgery;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IAntiforgery antiforgery)
         {
             _authService = authService;
+            _antiforgery = antiforgery;
         }
 
         /// <summary>
@@ -54,6 +57,7 @@ namespace PaymentsAPI.Controllers
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await _authService.LogoutAsync();
@@ -111,16 +115,28 @@ namespace PaymentsAPI.Controllers
         /// </summary>
         [HttpPut("profile")]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult<UserResponseDto>> UpdateProfile([FromBody] UserProfileUpdateDto updateDto)
         {
             try
             {
+                // Debug: Log the incoming request
+                Console.WriteLine($"Profile update request received for user: {User.Identity?.Name}");
+                Console.WriteLine($"CSRF token in header: {Request.Headers["X-CSRF-TOKEN"]}");
+                
                 var user = await _authService.UpdateProfileAsync(updateDto);
                 return Ok(user);
             }
             catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"Profile update failed: {ex.Message}");
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error in profile update: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
             }
         }
 
@@ -129,16 +145,53 @@ namespace PaymentsAPI.Controllers
         /// </summary>
         [HttpPut("change-password")]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
         {
             try
             {
+                // Debug: Log the incoming request
+                Console.WriteLine($"Change password request received for user: {User.Identity?.Name}");
+                Console.WriteLine($"CSRF token in header: {Request.Headers["X-CSRF-TOKEN"]}");
+                
                 await _authService.ChangePasswordAsync(changePasswordDto);
                 return Ok(new { message = "Password changed successfully" });
             }
             catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"Change password failed: {ex.Message}");
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error in change password: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get CSRF token for state-changing requests
+        /// </summary>
+        [HttpGet("csrf-token")]
+        [IgnoreAntiforgeryToken]
+        public IActionResult GetCsrfToken()
+        {
+            try
+            {
+                var tokens = _antiforgery.GetAndStoreTokens(HttpContext);
+                if (tokens?.RequestToken != null)
+                {
+                    return Ok(new { token = tokens.RequestToken });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Unable to generate CSRF token" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"CSRF token generation failed: {ex.Message}" });
             }
         }
     }
