@@ -1,0 +1,83 @@
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'payments-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'payments-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Frontend Tests and Build
+  test-and-build:
+    name: Test and Build Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: payments-frontend/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd payments-frontend
+        npm ci
+        
+    - name: Run linting
+      run: |
+        cd payments-frontend
+        npm run lint
+        
+    - name: Run tests
+      run: |
+        cd payments-frontend
+        npm test -- --coverage --watchAll=false
+        
+    - name: Build frontend
+      run: |
+        cd payments-frontend
+        npm run build
+        
+    - name: Upload frontend artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-artifacts
+        path: payments-frontend/build/
+
+  # Deploy to Production
+  deploy-prod:
+    name: Deploy Frontend to Production
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download frontend artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-artifacts
+        path: ./publish/frontend/
+        
+    - name: Deploy to Azure App Service (Production)
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ secrets.AZURE_APP_NAME_FRONTEND_PROD }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_FRONTEND_PROD }}
+        package: ./publish/frontend/
