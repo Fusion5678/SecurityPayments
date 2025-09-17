@@ -2,12 +2,12 @@ name: SecurityPayments API CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'PaymentsAPI/**'
       - '.github/workflows/api-ci.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'PaymentsAPI/**'
       - '.github/workflows/api-ci.yml'
@@ -60,7 +60,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     environment: production
     
     steps:

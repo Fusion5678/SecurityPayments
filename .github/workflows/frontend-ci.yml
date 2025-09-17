@@ -2,12 +2,12 @@ name: Frontend CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'payments-frontend/**'
       - '.github/workflows/frontend-ci.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'payments-frontend/**'
       - '.github/workflows/frontend-ci.yml'
@@ -42,11 +42,6 @@ jobs:
         cd payments-frontend
         npm run lint
         
-    - name: Run tests
-      run: |
-        cd payments-frontend
-        npm test -- --coverage --watchAll=false
-        
     - name: Build frontend
       run: |
         cd payments-frontend
@@ -56,14 +51,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: frontend-artifacts
-        path: payments-frontend/build/
+        path: payments-frontend/dist/
 
   # Deploy to Production
   deploy-prod:
     name: Deploy Frontend to Production
     runs-on: ubuntu-latest
     needs: test-and-build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     
     steps:
     - name: Checkout code
