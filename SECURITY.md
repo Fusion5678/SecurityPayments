@@ -1,77 +1,144 @@
-# Security Implementation Guide
+# Payments Project – Security Report
 
-## CSRF Protection
+> **Note:** This report describes the security measures currently implemented. It is not a final draft.
 
-### Backend Implementation
-- **Antiforgery Service**: Configured in `Program.cs` with secure cookie settings
-- **CSRF Token Endpoint**: `/api/auth/csrf-token` provides tokens for state-changing requests
-- **ValidateAntiForgeryToken**: Applied to all state-changing endpoints (POST/PUT/PATCH/DELETE)
-- **Automatic Token Injection**: Frontend automatically includes CSRF tokens in state-changing requests
+This report provides an overview of the security architecture and protections implemented across the Payments API (backend) and the Payments Frontend. The goal is to demonstrate how the system defends against common web application threats such as SQL injection, XSS, CSRF, and unauthorized access.
 
-### Frontend Implementation
-- **Axios Interceptor**: Automatically fetches and includes CSRF tokens
-- **Header Name**: `X-CSRF-TOKEN`
-- **Cookie Name**: `CSRF-TOKEN`
+## 1. Backend Security
 
-## Content Security Policy (CSP)
+The backend (ASP.NET Core API) implements multi-layered security controls:
 
-### Development
-```http
-Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval';
-```
+### Program.cs
+- Enforces cookie security policies: **HttpOnly**, **Secure**, **SameSite**
+- Security middleware:
+  - HTTPS redirection (production only)
+  - CORS policies (restricted origins for dev vs production)
+  - Security headers: HSTS, CSP, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy
+- Handles CORS preflight OPTIONS requests securely
+- Sliding expiration for authentication cookies
 
-### Production
-```http
-Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-{NONCE}'; style-src 'self' 'nonce-{NONCE}'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
-```
+### Services/AuthService.cs
+- **BCrypt** password hashing
+- JWT token generation and validation
+- Secure authentication cookie management
 
-## Security Headers
+### Controllers/AuthController.cs
+- Anti-forgery token validation (`[ValidateAntiForgeryToken]`)
+- CSRF token endpoint for frontend integration
+- `[Authorize]` attributes on protected endpoints
 
-- **X-Content-Type-Options**: `nosniff`
-- **X-XSS-Protection**: `1; mode=block`
-- **Strict-Transport-Security**: `max-age=31536000; includeSubDomains; preload` (production only)
-- **Referrer-Policy**: `no-referrer`
+### Data/PaymentsDbContext.cs
+- **Entity Framework Core** parameterized queries prevent SQL injection
 
-## Cookie Security
+### appsettings.json & appsettings.Production.json
+- Store JWT secrets, cookie expiration settings, and authentication configuration
+- Environment-specific security configurations (production vs local dev)
+- **Development**: Relaxed CORS origins, Lax SameSite cookies, detailed logging
+- **Production**: Restricted CORS origins, Strict SameSite cookies, minimal logging
+- **Kestrel HTTPS Configuration**: Explicit HTTPS endpoint binding
 
-- **HttpOnly**: `true` (prevents JavaScript access)
-- **Secure**: `Always` (HTTPS only)
-- **SameSite**: `Lax` (allows same domain, different ports)
-- **Authentication Cookie**: `PaymentsAuth`
-- **CSRF Cookie**: `CSRF-TOKEN`
+## 2. Frontend Security
 
-## Secrets Management
+The React frontend enforces input validation, token management, and route protection:
 
-### Configuration Files
-- **Template**: `appsettings.Template.json` (safe to commit)
-- **Development**: `appsettings.json` (contains local settings)
-- **Production**: `appsettings.Production.json` (empty secrets, use environment variables)
+### utils/validation.ts
+- Regex validation for emails, passwords, and IDs
+- Input sanitization before API submission
 
-### Environment Variables
-- Use Azure App Settings or environment variables for production secrets
-- Never commit sensitive data to version control
-- `.gitignore` properly excludes sensitive configuration files
+### api/axiosConfig.ts
+- JWT token attachment and CSRF token management
+- Security headers (`X-Requested-With: XMLHttpRequest`)
+- Request timeout protection and global error handling
+- **Method-Specific CSRF**: Only state-changing methods require CSRF tokens
+- **Credential Management**: Automatic cookie handling with `withCredentials`
 
-## CORS Configuration
+### components/ProtectedRoute.tsx
+- Route protection with authentication checks
 
-### Development
-```csharp
-policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001")
-      .AllowAnyHeader()
-      .AllowAnyMethod()
-      .AllowCredentials();
-```
+### context/AuthContext.tsx
+- Global authentication state management
+- **Automatic Authentication Check**: Validates auth state on app load
+- **Graceful Logout Handling**: Server logout failures don't prevent local state clearing
+- **Registration vs Login Separation**: Users must explicitly login after registration
 
-### Production
-Configure allowed origins via `Cors:AllowedOrigins` in appsettings.
+## 3. Form Security
 
-## Best Practices
+User input is validated at both frontend and backend layers:
 
-1. **Always use HTTPS** in production
-2. **Validate all inputs** on both client and server
-3. **Use parameterized queries** to prevent SQL injection
-4. **Implement rate limiting** for authentication endpoints
-5. **Regular security audits** and dependency updates
-6. **Monitor for suspicious activity**
-7. **Use strong password policies**
-8. **Implement proper session management**
+### pages/RegisterPage.tsx
+- Client-side input validation and sanitization
+- **Role Locking**: Customer role is hardcoded, preventing privilege escalation
+- **Field-Specific Validation**: Different validation rules for different user types
+
+### pages/LoginPage.tsx
+- Validates login credentials with regex rules
+- **Input Sanitization Integration**: All form inputs are sanitized before processing
+
+## 4. Key Security Protections
+
+The project implements a defense-in-depth approach, including:
+
+### Authentication & Session Security
+- **BCrypt** password hashing
+- JWT tokens with expiration
+- **HttpOnly**, **Secure**, **SameSite** cookies
+- Sliding expiration for persistent sessions
+
+### Input Validation & Sanitization
+- Regex validation on email, password, and IDs
+- Client-side and server-side validation
+
+### CSRF Protection
+- Anti-forgery tokens validated on state-changing endpoints
+- CSRF token endpoint for frontend integration
+
+### CORS Security
+- Environment-specific origin restrictions
+- Secure preflight OPTIONS request handling
+
+### Database Security
+- EF Core parameterized queries prevent SQL injection
+- **SQL Connection Encryption**: To be implemented for production database connections
+
+### Security Headers
+- **HSTS**: HTTP Strict Transport Security with configurable max-age, subdomains, and preload
+- **CSP**: Content Security Policy with nonce-based sources and frame-ancestors 'none'
+- **Referrer-Policy**: no-referrer policy
+- **X-Content-Type-Options**: nosniff to prevent MIME sniffing
+- **X-XSS-Protection**: XSS filtering for older browsers
+- **X-Requested-With**: CSRF protection indicator
+
+### Route Protection
+- `[Authorize]` attributes in backend
+- Protected routes in frontend
+
+### Transport Security
+- HTTPS enforced in production with HSTS
+- **Kestrel HTTPS Binding**: Explicit HTTPS endpoint configuration
+- **Protocol Downgrade Protection**: HSTS prevents HTTP downgrade attacks
+
+### Error Handling & Logging Security
+- **Global Error Handling**: Centralized error processing in axios interceptors
+- **Error Message Sanitization**: Generic error messages prevent information disclosure
+- **Development-only Features**: Swagger documentation only in development mode
+
+## 5. Threats Mitigated
+
+By combining these measures, the system is protected against:
+
+- **SQL Injection** → prevented by EF Core parameterized queries
+- **Cross-Site Scripting (XSS)** → mitigated with input sanitization + CSP headers + X-XSS-Protection
+- **Cross-Site Request Forgery (CSRF)** → mitigated with anti-forgery tokens + X-Requested-With headers
+- **Session Hijacking** → mitigated by HttpOnly/Secure cookies, JWT expiration, and SameSite policies
+- **Man-in-the-Middle (MITM)** → prevented by HTTPS + HSTS + protocol downgrade protection
+- **Unauthorized Access** → blocked by `[Authorize]` attributes + frontend route guards
+- **Clickjacking** → prevented by CSP frame-ancestors 'none'
+- **MIME Sniffing** → prevented by X-Content-Type-Options nosniff
+- **Information Disclosure** → prevented by error message sanitization and no-referrer policy
+- **Privilege Escalation** → prevented by role locking and explicit user type validation
+- **Request Timeout Attacks** → prevented by configurable timeout limits
+- **Network-based Attacks** → mitigated by CORS policies and credential management
+
+## 6. Conclusion
+
+The Payments Project has a robust security architecture with layered protections across both backend and frontend. From password hashing and JWT-based authentication to CSRF tokens, CORS policies, secure cookies, and security headers, the project is well-prepared to resist common web application attacks and safeguard sensitive payment data.
