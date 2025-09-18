@@ -135,14 +135,6 @@ const LoginPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Demo credentials: <br />
-              <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                admin / Admin123!
-              </span>
-            </p>
-          </div>
         </form>
       </div>
     </div>

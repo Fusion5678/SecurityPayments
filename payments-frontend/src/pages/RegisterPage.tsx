@@ -17,9 +17,7 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: string;
   idNumber: string;
-  employeeNumber: string;
 }
 
 interface FormErrors {
@@ -28,9 +26,7 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
-  role?: string;
   idNumber?: string;
-  employeeNumber?: string;
 }
 
 const RegisterPage: React.FC = () => {
@@ -50,9 +46,7 @@ const RegisterPage: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'Customer',
-    idNumber: '',
-    employeeNumber: ''
+    idNumber: ''
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -94,21 +88,11 @@ const RegisterPage: React.FC = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    // Role validation
-    if (!formData.role) {
-      newErrors.role = VALIDATION_MESSAGES.REQUIRED;
-    }
-
     // ID Number validation (required for customers)
-    if (formData.role === 'Customer' && !formData.idNumber.trim()) {
+    if (!formData.idNumber.trim()) {
       newErrors.idNumber = VALIDATION_MESSAGES.REQUIRED;
     } else if (formData.idNumber.trim() && !validateIdNumber(formData.idNumber)) {
       newErrors.idNumber = VALIDATION_MESSAGES.ID_NUMBER_INVALID;
-    }
-
-    // Employee Number validation (required for employees)
-    if (formData.role === 'Employee' && !formData.employeeNumber.trim()) {
-      newErrors.employeeNumber = 'Employee Number is required for employees';
     }
 
     setErrors(newErrors);
@@ -153,9 +137,9 @@ const RegisterPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         password: formData.password,
-        role: formData.role,
+        role: 'Customer',
         idNumber: formData.idNumber.trim() || undefined,
-        employeeNumber: formData.employeeNumber.trim() || undefined
+        employeeNumber: undefined
       });
 
       addNotification({
@@ -254,65 +238,24 @@ const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Role
+              <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700">
+                ID Number
               </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
+              <input
+                id="idNumber"
+                name="idNumber"
+                type="text"
+                required
+                value={formData.idNumber}
                 onChange={handleInputChange}
-                className={`mt-1 input-field ${errors.role ? 'input-error' : ''}`}
-              >
-                <option value="Customer">Customer</option>
-                <option value="Employee">Employee</option>
-                <option value="Admin">Admin</option>
-              </select>
-              {errors.role && (
-                <p className="mt-1 text-sm text-danger-600">{errors.role}</p>
+                className={`mt-1 input-field ${errors.idNumber ? 'input-error' : ''}`}
+                placeholder="Enter your 13-digit ID number"
+                maxLength={13}
+              />
+              {errors.idNumber && (
+                <p className="mt-1 text-sm text-danger-600">{errors.idNumber}</p>
               )}
             </div>
-
-            {formData.role === 'Customer' && (
-              <div>
-                <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700">
-                  ID Number
-                </label>
-                <input
-                  id="idNumber"
-                  name="idNumber"
-                  type="text"
-                  value={formData.idNumber}
-                  onChange={handleInputChange}
-                  className={`mt-1 input-field ${errors.idNumber ? 'input-error' : ''}`}
-                  placeholder="Enter your 13-digit ID number"
-                  maxLength={13}
-                />
-                {errors.idNumber && (
-                  <p className="mt-1 text-sm text-danger-600">{errors.idNumber}</p>
-                )}
-              </div>
-            )}
-
-            {formData.role === 'Employee' && (
-              <div>
-                <label htmlFor="employeeNumber" className="block text-sm font-medium text-gray-700">
-                  Employee Number
-                </label>
-                <input
-                  id="employeeNumber"
-                  name="employeeNumber"
-                  type="text"
-                  value={formData.employeeNumber}
-                  onChange={handleInputChange}
-                  className={`mt-1 input-field ${errors.employeeNumber ? 'input-error' : ''}`}
-                  placeholder="Enter your employee number"
-                />
-                {errors.employeeNumber && (
-                  <p className="mt-1 text-sm text-danger-600">{errors.employeeNumber}</p>
-                )}
-              </div>
-            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
