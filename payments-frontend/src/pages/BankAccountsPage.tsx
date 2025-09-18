@@ -358,13 +358,6 @@ const BankAccountsPage: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900">
                       {account.bankName}
                     </h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      account.isActive 
-                        ? 'bg-success-100 text-success-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {account.isActive ? 'Active' : 'Inactive'}
-                    </span>
                   </div>
 
                   <div className="space-y-3">
