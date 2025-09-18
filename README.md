@@ -39,5 +39,5 @@ For detailed information on implemented security measures, please see SECURITY.m
 
 ## Implementation Status
 
--**Currently Implemented**: Customer Portal with registration, login, bank account management, profile management, payment creation, and employee verification workflows
--**Still to be Implemented**: Azure deployment and DevSecOps pipeline for deployment and continuous security monitoring
+- **Currently Implemented**: Customer Portal with registration, login, bank account management, profile management, payment creation, and employee verification workflows
+- **Still to be Implemented**: Azure deployment and DevSecOps pipeline for deployment and continuous security monitoring
