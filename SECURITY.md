@@ -67,7 +67,6 @@ User input is validated at both frontend and backend layers:
 
 ### pages/RegisterPage.tsx
 - Client-side input validation and sanitization
-- **Role Locking**: Customer role is hardcoded, preventing privilege escalation
 - **Field-Specific Validation**: Different validation rules for different user types
 
 ### pages/LoginPage.tsx
