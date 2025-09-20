@@ -13,7 +13,7 @@ For detailed information on implemented security measures, please see SECURITY.m
 - **Login** – Authenticate with username and password
 - **Bank Account Management** – Create, view, update, and delete bank accounts with different currencies
 - **Profile Management** – Update personal information and change password
-- **Payment Creation** – Enter amount, select currency, and choose SWIFT as payment provider
+- **Payment Creation** – Enter amount, select currency
 - **Recipient Details** – Provide payee account information and SWIFT code for transfers
 - **Payment Submission** – Submit payment via "Pay Now"
 - **Payment Tracking** – Track payment status and view history
@@ -37,7 +37,14 @@ For detailed information on implemented security measures, please see SECURITY.m
 - Secure database storage of transactions
 - Payment status tracking with real-time updates
 
+## Technology Stack
+
+- **Backend**: ASP.NET Core 9 Web API with Entity Framework Core
+- **Frontend**: React with TypeScript and Tailwind CSS
+- **Database**: SQL Server
+- **Payment Network**: Dummy SWIFT API integration for testing
+
 ## Implementation Status
 
--**Currently Implemented**: Customer Portal with registration, login, bank account management, profile management, payment creation, and employee verification workflows
--**Still to be Implemented**: Azure deployment and DevSecOps pipeline for deployment and continuous security monitoring
+-**Currently Implemented**: Customer Portal with registration, login, bank account management, profile management, payment creation
+-**Still to be Implemented**: Employee portal,Azure deployment and DevSecOps pipeline for deployment and continuous security monitoring

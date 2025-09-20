@@ -67,8 +67,7 @@ User input is validated at both frontend and backend layers:
 
 ### pages/RegisterPage.tsx
 - Client-side input validation and sanitization
-- **Role Locking**: Customer role is hardcoded, preventing privilege escalation
-- **Field-Specific Validation**: Different validation rules for different user types
+
 
 ### pages/LoginPage.tsx
 - Validates login credentials with regex rules
@@ -117,10 +116,10 @@ The project implements a defense-in-depth approach, including:
 - **Kestrel HTTPS Binding**: Explicit HTTPS endpoint configuration
 - **Protocol Downgrade Protection**: HSTS prevents HTTP downgrade attacks
 
-### Error Handling & Logging Security
+### Error Handling
 - **Global Error Handling**: Centralized error processing in axios interceptors
 - **Error Message Sanitization**: Generic error messages prevent information disclosure
-- **Development-only Features**: Swagger documentation only in development mode
+
 
 ## 5. Threats Mitigated
 
@@ -135,7 +134,6 @@ By combining these measures, the system is protected against:
 - **Clickjacking** → prevented by CSP frame-ancestors 'none'
 - **MIME Sniffing** → prevented by X-Content-Type-Options nosniff
 - **Information Disclosure** → prevented by error message sanitization and no-referrer policy
-- **Privilege Escalation** → prevented by role locking and explicit user type validation
 - **Request Timeout Attacks** → prevented by configurable timeout limits
 - **Network-based Attacks** → mitigated by CORS policies and credential management
 

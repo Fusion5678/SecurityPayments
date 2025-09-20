@@ -1,10 +1,10 @@
 -- ========================
 -- CREATE DATABASE
 -- ========================
-CREATE DATABASE BankPayments;
+CREATE DATABASE PaymentsDB;
 GO
 
-USE BankPayments;
+USE PaymentsDB;
 GO
 
 -- ========================
@@ -80,29 +80,3 @@ CREATE TABLE PaymentVerifications (
     Action           VARCHAR(20) NOT NULL CHECK (Action IN ('Verified','Rejected'))
 );
 
--- ========================
--- SAMPLE DATA (OPTIONAL)
--- ========================
-
--- Insert sample employee
-INSERT INTO Users (FullName, Username, Email, PasswordHash, PasswordSalt, Role, EmployeeNumber)
-VALUES ('Alice Verifier', 'alice.v', 'alice@bank.com', 'hashed_pw_here', 'salt_here', 'Employee', 'EMP001');
-
--- Insert sample customer
-INSERT INTO Users (FullName, Username, Email, PasswordHash, PasswordSalt, Role, IDNumber)
-VALUES ('John Doe', 'johnd', 'john@example.com', 'hashed_pw_here', 'salt_here', 'Customer', '1234567890123');
-
--- Assign bank account to customer
-INSERT INTO BankAccounts (UserID, AccountNumber, AccountType, Balance, CurrencyCode)
-VALUES (2, '1234567890', 'Checking', 50000.00, 'ZAR');
-
--- Customer creates a payment
-INSERT INTO Payments (AccountID, Amount, CurrencyCode, PayeeAccount, PayeeSwiftCode)
-VALUES (1, 1500.00, 'USD', '9876543210', 'ABCDUS33');
-
--- Employee verifies the payment
-INSERT INTO PaymentVerifications (PaymentID, EmployeeID, Action)
-VALUES (1, 1, 'Verified');
-
--- Update payment status after verification
-UPDATE Payments SET Status = 'Verified' WHERE PaymentID = 1;

@@ -25,7 +25,7 @@ The API works with the following tables:
 ## Setup Instructions
 
 ### 1. Prerequisites
-- .NET 7.0 SDK
+- .NET 9.0 SDK
 - SQL Server (local or remote)
 - Database named "PaymentsDB" with the required tables
 

@@ -62,7 +62,6 @@ builder.Services.AddAntiforgery(options =>
     {
         "Strict" => SameSiteMode.Strict,
         "Lax" => SameSiteMode.Lax,
-        "None" => SameSiteMode.None,
         _ => SameSiteMode.Strict
     };
 });
