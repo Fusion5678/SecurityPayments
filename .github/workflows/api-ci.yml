@@ -55,16 +55,11 @@ jobs:
       - name: Publish API
         run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ./publish/api --no-build
       
-      - name: Create deployment package
-        run: |
-          cd ./publish
-          zip -r api-deployment.zip api/
-      
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: api-build-artifacts
-          path: ./publish/api-deployment.zip
+          path: ./publish/api/
           retention-days: 1
 
   # -------------------------
@@ -107,8 +102,7 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME_PROD }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_PROD }}
-          package: ./publish/api-deployment.zip
-          type: zip
+          package: ./publish/
         
       - name: Notify Deployment Success
         if: success()
