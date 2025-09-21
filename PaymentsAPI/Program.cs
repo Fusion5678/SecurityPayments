@@ -17,6 +17,18 @@ Console.WriteLine($"WEBSITE_SITE_NAME: {Environment.GetEnvironmentVariable("WEBS
 Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
 Console.WriteLine($"Executing Assembly: {System.Reflection.Assembly.GetExecutingAssembly().Location}");
 
+// Test basic functionality
+Console.WriteLine("Testing basic operations...");
+try 
+{
+    var test = "Hello World";
+    Console.WriteLine($"Test string: {test}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Basic test failed: {ex.Message}");
+}
+
 try
 {
     Console.WriteLine("Creating WebApplication builder...");
@@ -207,6 +219,10 @@ app.UseAuthorization();
 
 // Map controllers
 app.MapControllers();
+
+// Add a simple health check endpoint that doesn't require any configuration
+app.MapGet("/health", () => "OK");
+app.MapGet("/", () => "Payments API is running");
 
     try
     {
