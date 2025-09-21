@@ -2,13 +2,13 @@ name: SecurityPayments API CI/CD Pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dev ]
     paths:
       - 'PaymentsAPI/**'
       - '.github/workflows/api-ci.yml'
       - '.env.ci'
   pull_request:
-    branches: [ master ]
+    branches: [ master, dev ]
     paths:
       - 'PaymentsAPI/**'
       - '.github/workflows/api-ci.yml'
