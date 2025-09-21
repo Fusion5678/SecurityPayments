@@ -3,14 +3,32 @@ using PaymentsAPI.Data;
 using PaymentsAPI.Services;
 using System.Text.RegularExpressions;
 
+// Global exception handler for startup
+AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+{
+    Console.WriteLine($"UNHANDLED EXCEPTION: {e.ExceptionObject}");
+    Console.WriteLine($"Is terminating: {e.IsTerminating}");
+};
+
+// Force console output immediately
+Console.WriteLine("=== PAYMENTS API STARTUP ===");
+Console.WriteLine($"Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Not Set"}");
+Console.WriteLine($"WEBSITE_SITE_NAME: {Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") ?? "Not Set"}");
+Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
+Console.WriteLine($"Executing Assembly: {System.Reflection.Assembly.GetExecutingAssembly().Location}");
+
 try
 {
+    Console.WriteLine("Creating WebApplication builder...");
     var builder = WebApplication.CreateBuilder(args);
+    Console.WriteLine("Builder created successfully");
 
     // Add logging to help diagnose startup issues
+    Console.WriteLine("Configuring logging...");
     builder.Logging.ClearProviders();
     builder.Logging.AddConsole();
     builder.Logging.SetMinimumLevel(LogLevel.Debug);
+    Console.WriteLine("Logging configured");
 
     Console.WriteLine("Starting application configuration...");
 
