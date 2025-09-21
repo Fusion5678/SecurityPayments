@@ -1,6 +1,6 @@
 # Payments API
 
-A .NET Core 7 Web API project using Entity Framework Core with Database-First approach for SQL Server.
+A .NET 8 Web API project using Entity Framework Core with Database-First approach for SQL Server.
 
 ## Features
 
@@ -25,7 +25,7 @@ The API works with the following tables:
 ## Setup Instructions
 
 ### 1. Prerequisites
-- .NET 9.0 SDK
+- .NET 8.0 SDK
 - SQL Server (local or remote)
 - Database named "PaymentsDB" with the required tables
 
@@ -134,7 +134,7 @@ If you want to regenerate the models from an existing database:
 
 ```bash
 # Install EF Core tools
-dotnet tool install --global dotnet-ef --version 7.0.0
+dotnet tool install --global dotnet-ef --version 8.0.0
 
 # Scaffold the database
 dotnet ef dbcontext scaffold "Server=localhost;Database=PaymentsDB;User Id=sa;Password=password;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -o Models -c PaymentsDbContext --context-dir Data --force

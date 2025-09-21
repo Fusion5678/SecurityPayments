@@ -30,6 +30,8 @@ jobs:
       
       - name: Load environment variables
         run: |
+          DOTNET_VERSION=8.0.x
+          echo "DOTNET_VERSION=$DOTNET_VERSION" >> $GITHUB_ENV
           while IFS= read -r line; do
             if [[ $line =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
               echo "$line" >> $GITHUB_ENV
@@ -81,6 +83,8 @@ jobs:
       
       - name: Load environment variables
         run: |
+          DOTNET_VERSION=8.0.x
+          echo "DOTNET_VERSION=$DOTNET_VERSION" >> $GITHUB_ENV
           while IFS= read -r line; do
             if [[ $line =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
               echo "$line" >> $GITHUB_ENV

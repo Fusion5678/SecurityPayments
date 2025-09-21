@@ -39,7 +39,7 @@ For detailed information on implemented security measures, please see SECURITY.m
 
 ## Technology Stack
 
-- **Backend**: ASP.NET Core 9 Web API with Entity Framework Core
+- **Backend**: ASP.NET Core 8 Web API with Entity Framework Core
 - **Frontend**: React with TypeScript and Tailwind CSS
 - **Database**: SQL Server
 - **Payment Network**: Dummy SWIFT API integration for testing
