@@ -121,8 +121,11 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Enforce HTTPS redirection
-app.UseHttpsRedirection();
+// Enforce HTTPS redirection (skip on Azure App Service Linux)
+if (!app.Environment.IsProduction() || Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") == null)
+{
+   // app.UseHttpsRedirection();
+}
 
 // Apply security headers globally
 app.Use(async (context, next) =>
