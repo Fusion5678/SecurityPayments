@@ -6,16 +6,15 @@ on:
     paths:
       - 'PaymentsAPI/**'
       - '.github/workflows/api-ci.yml'
+      - '.env.ci'
   pull_request:
     branches: [ master ]
     paths:
       - 'PaymentsAPI/**'
       - '.github/workflows/api-ci.yml'
+      - '.env.ci'
 
-env:
-  DOTNET_VERSION: '7.0.x'
-  AZURE_WEBAPP_NAME_PROD: 'myapp-api-prod'
-  AZURE_WEBAPP_PACKAGE_PATH: './PaymentsAPI'
+# Environment variables will be loaded from .env.ci file in the workflow steps
 
 jobs:
   # -------------------------
@@ -29,6 +28,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Load environment variables from .env.ci
+        uses: xom9ikk/dotenv@v2
+        with:
+          path: .env.ci
+      
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -38,13 +42,13 @@ jobs:
         run: dotnet restore ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
       
       - name: Build project
-        run: dotnet build ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-restore --configuration Release
+        run: dotnet build ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-restore --configuration ${{ env.BUILD_CONFIGURATION }}
       
       - name: Run tests
-        run: dotnet test ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+        run: dotnet test ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity normal --collect:"XPlat Code Coverage"
       
       - name: Publish API
-        run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration Release --output ./publish/api --no-build
+        run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ./publish/api --no-build
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -66,6 +70,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Load environment variables from .env.ci
+        uses: xom9ikk/dotenv@v2
+        with:
+          path: .env.ci
       
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
