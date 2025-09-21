@@ -11,7 +11,7 @@ AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
 };
 
 // Force console output immediately
-Console.WriteLine("=== PAYMENTS API STARTUP ===");
+Console.WriteLine("=== PAYMENTS API STARTUP (.NET 8) ===");
 Console.WriteLine($"Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Not Set"}");
 Console.WriteLine($"WEBSITE_SITE_NAME: {Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") ?? "Not Set"}");
 Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
