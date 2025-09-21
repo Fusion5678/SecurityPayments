@@ -3,47 +3,72 @@ using PaymentsAPI.Data;
 using PaymentsAPI.Services;
 using System.Text.RegularExpressions;
 
-var builder = WebApplication.CreateBuilder(args);
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
-// --------------------
-// Add services to the container
-// --------------------
-builder.Services.AddControllers();
-builder.Services.AddMvc();
+    // Add logging to help diagnose startup issues
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+    builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
-// Add Entity Framework
-builder.Services.AddDbContext<PaymentsDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    Console.WriteLine("Starting application configuration...");
 
-// Add Authentication
-builder.Services.AddAuthentication("Cookies")
-    .AddCookie("Cookies", options =>
+    // --------------------
+    // Add services to the container
+    // --------------------
+    Console.WriteLine("Adding controllers and MVC...");
+    builder.Services.AddControllers();
+    builder.Services.AddMvc();
+
+    // Add Entity Framework
+    Console.WriteLine("Configuring Entity Framework...");
+    try
     {
-        var authConfig = builder.Configuration.GetSection("Authentication:Cookie");
-        options.LoginPath = authConfig["LoginPath"];
-        options.LogoutPath = authConfig["LogoutPath"];
-        options.AccessDeniedPath = authConfig["AccessDeniedPath"];
-        options.ExpireTimeSpan = TimeSpan.FromHours(int.Parse(authConfig["ExpireHours"]));
-        options.SlidingExpiration = true;
-        options.Cookie.HttpOnly = bool.Parse(authConfig["HttpOnly"]);
-        options.Cookie.SecurePolicy = authConfig["SecurePolicy"] switch
-        {
-            "Always" => CookieSecurePolicy.Always,
-            "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
-            _ => CookieSecurePolicy.Always
-        };
-        options.Cookie.SameSite = authConfig["SameSite"] switch
-        {
-            "Strict" => SameSiteMode.Strict,
-            "Lax" => SameSiteMode.Lax,
-            "None" => SameSiteMode.None,
-            _ => SameSiteMode.Strict
-        };
-        options.Cookie.Name = authConfig["Name"];
-    });
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        Console.WriteLine($"Connection string: {connectionString}");
+        builder.Services.AddDbContext<PaymentsDbContext>(options =>
+            options.UseSqlServer(connectionString));
+        Console.WriteLine("Entity Framework configured successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Entity Framework configuration failed: {ex.Message}");
+        throw;
+    }
 
-// Add Authorization
-builder.Services.AddAuthorization();
+    // Add Authentication
+    Console.WriteLine("Configuring Authentication...");
+    builder.Services.AddAuthentication("Cookies")
+        .AddCookie("Cookies", options =>
+        {
+            var authConfig = builder.Configuration.GetSection("Authentication:Cookie");
+            options.LoginPath = authConfig["LoginPath"];
+            options.LogoutPath = authConfig["LogoutPath"];
+            options.AccessDeniedPath = authConfig["AccessDeniedPath"];
+            options.ExpireTimeSpan = TimeSpan.FromHours(int.Parse(authConfig["ExpireHours"]));
+            options.SlidingExpiration = true;
+            options.Cookie.HttpOnly = bool.Parse(authConfig["HttpOnly"]);
+            options.Cookie.SecurePolicy = authConfig["SecurePolicy"] switch
+            {
+                "Always" => CookieSecurePolicy.Always,
+                "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
+                _ => CookieSecurePolicy.Always
+            };
+            options.Cookie.SameSite = authConfig["SameSite"] switch
+            {
+                "Strict" => SameSiteMode.Strict,
+                "Lax" => SameSiteMode.Lax,
+                "None" => SameSiteMode.None,
+                _ => SameSiteMode.Strict
+            };
+            options.Cookie.Name = authConfig["Name"];
+        });
+    Console.WriteLine("Authentication configured successfully");
+
+    // Add Authorization
+    Console.WriteLine("Configuring Authorization...");
+    builder.Services.AddAuthorization();
 
 // Add CSRF Protection
 builder.Services.AddAntiforgery(options =>
@@ -165,4 +190,21 @@ app.UseAuthorization();
 // Map controllers
 app.MapControllers();
 
-app.Run();
+    try
+    {
+        Console.WriteLine("Starting application...");
+        app.Run();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Application startup failed: {ex.Message}");
+        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        throw;
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Application configuration failed: {ex.Message}");
+    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+    throw;
+}
