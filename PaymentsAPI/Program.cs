@@ -35,6 +35,18 @@ try
     var builder = WebApplication.CreateBuilder(args);
     Console.WriteLine("Builder created successfully");
 
+    // Configure Kestrel for production - force HTTP only
+    if (builder.Environment.IsProduction())
+    {
+        Console.WriteLine("Production environment detected - configuring Kestrel for HTTP only");
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(8080); // Only HTTP
+            // Do NOT call options.ListenAnyIP(443) or UseHttps()
+        });
+        Console.WriteLine("Kestrel configured for HTTP on port 8080");
+    }
+
     // Add logging to help diagnose startup issues
     Console.WriteLine("Configuring logging...");
     builder.Logging.ClearProviders();
@@ -177,8 +189,10 @@ app.Use(async (context, next) =>
 });
 
 // Enforce HTTPS redirection (skip on Azure App Service Linux)
-
-   // app.UseHttpsRedirection();
+if (!app.Environment.IsProduction())
+{
+  app.UseHttpsRedirection();
+}
 
 // Apply security headers globally
 app.Use(async (context, next) =>
