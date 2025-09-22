@@ -14,6 +14,8 @@ on:
 
 env:
   NODE_VERSION: '20'
+  AZURE_APP_NAME_FRONTEND: 'st10500143-payments-portal'
+  VITE_API_BASE_URL: 'https://st10500143-payments.azurewebsites.net/api'
 
 jobs:
   # Frontend Tests and Build
@@ -55,36 +57,73 @@ jobs:
         name: frontend-artifacts
         path: payments-frontend/dist/
 
-  # Deploy to Production
-  deploy-prod:
-    name: Deploy Frontend to Production
+  # Deploy to Production (both master and dev branches)
+  deploy:
+    name: Deploy Frontend
     runs-on: ubuntu-latest
     needs: test-and-build
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev'
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Load environment variables
+    - name: Set build environment variables
+      run: |
+        echo "VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}" >> $GITHUB_ENV
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          echo "VITE_APP_NAME=SecurityPayments Portal" >> $GITHUB_ENV
+          echo "VITE_ENVIRONMENT=production" >> $GITHUB_ENV
+        else
+          echo "VITE_APP_NAME=SecurityPayments Portal (Dev)" >> $GITHUB_ENV
+          echo "VITE_ENVIRONMENT=development" >> $GITHUB_ENV
+        fi
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: payments-frontend/package-lock.json
+        
+    - name: Install dependencies
       run: |
         cd payments-frontend
-        # Load variables from .env.production
-        while IFS='=' read -r key value; do
-          if [[ $key != \#* ]] && [[ -n $key ]]; then
-            echo "$key=$value" >> $GITHUB_ENV
-          fi
-        done < .env.production
+        npm ci
         
-    - name: Download frontend artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: frontend-artifacts
-        path: ./publish/frontend/
+    - name: Build frontend
+      env:
+        VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+        NODE_ENV: production
+      run: |
+        cd payments-frontend
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          VITE_APP_NAME="SecurityPayments Portal" VITE_ENVIRONMENT="production" npm run build
+        else
+          VITE_APP_NAME="SecurityPayments Portal (Dev)" VITE_ENVIRONMENT="development" npm run build
+        fi
         
-    - name: Deploy to Azure App Service (Production)
+    - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
-        app-name: ${{ env.AZURE_APP_NAME_FRONTEND_PROD }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_FRONTEND_PROD }}
-        package: ./publish/frontend/
+        app-name: ${{ env.AZURE_APP_NAME_FRONTEND }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_FRONTEND }}
+        package: payments-frontend/dist/
+        
+    - name: Notify Deployment Success
+      if: success()
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          echo "✅ SecurityPayments Frontend successfully deployed to production!"
+        else
+          echo "✅ SecurityPayments Frontend successfully deployed from dev branch!"
+        fi
+        echo "🌐 Frontend URL: https://${{ env.AZURE_APP_NAME_FRONTEND }}.azurewebsites.net"
+        echo "🔗 API Backend: ${{ env.VITE_API_BASE_URL }}"
+        echo "📦 Deployed from branch: ${{ github.ref_name }}"
+        
+    - name: Notify Deployment Failure
+      if: failure()
+      run: |
+        echo "❌ Frontend deployment failed!"
+        echo "Please check the deployment logs and Azure configuration."

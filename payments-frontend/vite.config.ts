@@ -9,4 +9,13 @@ export default defineConfig({
     port: 3001,
     https: true,
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'esbuild',
+  },
+  define: {
+    // Ensure environment variables are properly replaced at build time
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+  },
 })
