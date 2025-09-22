@@ -98,6 +98,13 @@ try
                 "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
                 _ => CookieSecurePolicy.Always
             };
+            options.Cookie.SameSite = authConfig["SameSite"] switch
+            {
+                "None" => SameSiteMode.None,
+                "Lax" => SameSiteMode.Lax,
+                "Strict" => SameSiteMode.Strict,
+                _ => SameSiteMode.None
+            };
             options.Cookie.Name = authConfig["Name"];
         });
     Console.WriteLine("Authentication configured successfully");
@@ -118,6 +125,13 @@ builder.Services.AddAntiforgery(options =>
         "Always" => CookieSecurePolicy.Always,
         "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
         _ => CookieSecurePolicy.Always
+    };
+    options.Cookie.SameSite = csrfConfig["SameSite"] switch
+    {
+        "None" => SameSiteMode.None,
+        "Lax" => SameSiteMode.Lax,
+        "Strict" => SameSiteMode.Strict,
+        _ => SameSiteMode.None
     };
 });
 
