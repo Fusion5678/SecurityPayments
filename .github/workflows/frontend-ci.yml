@@ -103,6 +103,12 @@ jobs:
           VITE_APP_NAME="SecurityPayments Portal (Dev)" VITE_ENVIRONMENT="development" npm run build
         fi
         
+    - name: Copy web.config to dist
+      run: |
+        cp payments-frontend/public/web.config payments-frontend/dist/web.config
+        cp payments-frontend/public/.htaccess payments-frontend/dist/.htaccess
+        ls -la payments-frontend/dist/
+        
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3
       with:
