@@ -114,6 +114,13 @@ jobs:
         echo "Checking Node.js files:"
         ls -la payments-frontend/dist/package.json payments-frontend/dist/server.js
         
+    - name: Install production dependencies in dist
+      run: |
+        cd payments-frontend/dist
+        npm install --production --no-package-lock
+        echo "Node modules installed:"
+        ls -la node_modules/ | head -10
+        
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3
       with:
