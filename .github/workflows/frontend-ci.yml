@@ -27,6 +27,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Security - Secret Scanning
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+      
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -43,6 +51,16 @@ jobs:
       run: |
         cd payments-frontend
         npm run lint
+        
+    - name: Security - Dependency Vulnerability Scan
+      run: |
+        cd payments-frontend
+        npm audit --audit-level=moderate
+        
+    - name: Security - Check for known vulnerabilities
+      run: |
+        cd payments-frontend
+        npx audit-ci --moderate
         
     - name: Build frontend
       env:

@@ -27,6 +27,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        
+      - name: Security - Secret Scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+          
+      - name: Security - Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'csharp'
+          queries: security-and-quality
       
       - name: Load environment variables
         run: |
@@ -49,11 +63,27 @@ jobs:
       - name: Build project
         run: dotnet build ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-restore --configuration ${{ env.BUILD_CONFIGURATION }}
       
+      - name: Security - .NET Vulnerability Scan
+        run: |
+          cd PaymentsAPI
+          dotnet list package --vulnerable --include-transitive
+          
+      - name: Security - NuGet Package Audit
+        run: |
+          cd PaymentsAPI
+          dotnet restore --verbosity quiet
+          dotnet list package --outdated
+      
       - name: Run tests
         run: dotnet test ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity normal --collect:"XPlat Code Coverage"
       
       - name: Publish API
         run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ./publish/api --no-build
+      
+      - name: Security - Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:csharp"
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
