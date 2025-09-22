@@ -3,86 +3,41 @@ using PaymentsAPI.Data;
 using PaymentsAPI.Services;
 using System.Text.RegularExpressions;
 
-// Global exception handler for startup
-AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-{
-    Console.WriteLine($"UNHANDLED EXCEPTION: {e.ExceptionObject}");
-    Console.WriteLine($"Is terminating: {e.IsTerminating}");
-};
+var builder = WebApplication.CreateBuilder(args);
 
-// Force console output immediately
-Console.WriteLine("=== PAYMENTS API STARTUP (.NET 8) ===");
-Console.WriteLine($"Environment: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Not Set"}");
-Console.WriteLine($"WEBSITE_SITE_NAME: {Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME") ?? "Not Set"}");
-Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
-Console.WriteLine($"Executing Assembly: {System.Reflection.Assembly.GetExecutingAssembly().Location}");
-
-// Test basic functionality
-Console.WriteLine("Testing basic operations...");
-try 
+// Configure Kestrel for production - force HTTP only
+if (builder.Environment.IsProduction())
 {
-    var test = "Hello World";
-    Console.WriteLine($"Test string: {test}");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Basic test failed: {ex.Message}");
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.ListenAnyIP(8080); // Only HTTP
+        options.AddServerHeader = false; // Remove Server header for security
+    });
 }
 
-try
+// Configure logging for production
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+if (builder.Environment.IsProduction())
 {
-    Console.WriteLine("Creating WebApplication builder...");
-    var builder = WebApplication.CreateBuilder(args);
-    Console.WriteLine("Builder created successfully");
+    builder.Logging.SetMinimumLevel(LogLevel.Warning);
+}
+else
+{
+    builder.Logging.SetMinimumLevel(LogLevel.Information);
+}
 
-    // Configure Kestrel for production - force HTTP only
-    if (builder.Environment.IsProduction())
-    {
-        Console.WriteLine("Production environment detected - configuring Kestrel for HTTP only");
-        builder.WebHost.ConfigureKestrel(options =>
-        {
-            options.ListenAnyIP(8080); // Only HTTP
-            options.AddServerHeader = false; // Remove Server header for security
-            // Do NOT call options.ListenAnyIP(443) or UseHttps()
-        });
-        Console.WriteLine("Kestrel configured for HTTP on port 8080 with security headers");
-    }
+// Add services to the container
+builder.Services.AddControllers();
+builder.Services.AddMvc();
 
-    // Add logging to help diagnose startup issues
-    Console.WriteLine("Configuring logging...");
-    builder.Logging.ClearProviders();
-    builder.Logging.AddConsole();
-    builder.Logging.SetMinimumLevel(LogLevel.Debug);
-    Console.WriteLine("Logging configured");
+// Add Entity Framework
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<PaymentsDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
-    Console.WriteLine("Starting application configuration...");
-
-    // --------------------
-    // Add services to the container
-    // --------------------
-    Console.WriteLine("Adding controllers and MVC...");
-    builder.Services.AddControllers();
-    builder.Services.AddMvc();
-
-    // Add Entity Framework
-    Console.WriteLine("Configuring Entity Framework...");
-    try
-    {
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        Console.WriteLine($"Connection string: {connectionString}");
-        builder.Services.AddDbContext<PaymentsDbContext>(options =>
-            options.UseSqlServer(connectionString));
-        Console.WriteLine("Entity Framework configured successfully");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Entity Framework configuration failed: {ex.Message}");
-        throw;
-    }
-
-    // Add Authentication
-    Console.WriteLine("Configuring Authentication...");
-    builder.Services.AddAuthentication("Cookies")
+// Add Authentication
+builder.Services.AddAuthentication("Cookies")
         .AddCookie("Cookies", options =>
         {
             var authConfig = builder.Configuration.GetSection("Authentication:Cookie");
@@ -107,11 +62,9 @@ try
             };
             options.Cookie.Name = authConfig["Name"];
         });
-    Console.WriteLine("Authentication configured successfully");
 
-    // Add Authorization
-    Console.WriteLine("Configuring Authorization...");
-    builder.Services.AddAuthorization();
+// Add Authorization
+builder.Services.AddAuthorization();
 
 // Add CSRF Protection
 builder.Services.AddAntiforgery(options =>
@@ -262,21 +215,4 @@ app.MapGet("/health", () => "OK");
 
 app.MapGet("/", () => "Payments API is running");
 
-    try
-    {
-        Console.WriteLine("Starting application...");
-        app.Run();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Application startup failed: {ex.Message}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
-        throw;
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Application configuration failed: {ex.Message}");
-    Console.WriteLine($"Stack trace: {ex.StackTrace}");
-    throw;
-}
+app.Run();

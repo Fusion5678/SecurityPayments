@@ -38,11 +38,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(userData);
       } catch (error) {
         // User is not authenticated - this is normal for unauthenticated users
-        if (error instanceof Error && error.message === 'Unauthorized') {
-          console.log('User not authenticated - this is normal');
-        } else {
-          console.error('Authentication check failed:', error);
-        }
         setUser(null);
       } finally {
         setLoading(false);
@@ -66,7 +61,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authAPI.logout();
     } catch (error) {
       // Even if logout fails on server, clear local state
-      console.error('Logout error:', error);
     } finally {
       setUser(null);
     }

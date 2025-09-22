@@ -11,15 +11,9 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for logging, CSRF tokens, and error handling
+// Request interceptor for CSRF tokens and error handling
 api.interceptors.request.use(
   async (config) => {
-    // Log requests in development
-    if (import.meta.env.VITE_ENABLE_DEBUG === 'true') {
-      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
-      console.log('Request headers:', config.headers);
-      console.log('WithCredentials:', config.withCredentials);
-    }
 
     // Add CSRF token for state-changing requests (except for CSRF token requests)
     if (config.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method.toUpperCase()) && 
@@ -28,22 +22,16 @@ api.interceptors.request.use(
         const csrfResponse = await api.get('/auth/csrf-token');
         if (csrfResponse.data?.token) {
           config.headers['X-CSRF-TOKEN'] = csrfResponse.data.token;
-          console.log('CSRF token added:', csrfResponse.data.token);
-        } else {
-          console.warn('CSRF token response missing token field');
         }
       } catch (error) {
-        console.error('Failed to get CSRF token:', error);
-        // For now, allow the request to proceed without CSRF token
-        // In production, you might want to throw an error here
-        console.warn('Proceeding without CSRF token');
+        // Allow the request to proceed without CSRF token
+        // This prevents blocking legitimate requests if CSRF endpoint is unavailable
       }
     }
 
     return config;
   },
   (error) => {
-    console.error('Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -51,27 +39,11 @@ api.interceptors.request.use(
 // Response interceptor for global error handling
 api.interceptors.response.use(
   (response) => {
-    if (import.meta.env.VITE_ENABLE_DEBUG === 'true') {
-      console.log(`API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
-    }
     return response;
   },
   (error) => {
-    // Enhanced error logging
-    if (import.meta.env.VITE_ENABLE_DEBUG === 'true') {
-      console.log('API Error Details:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers
-      });
-    }
-
     // Handle network errors
     if (!error.response) {
-      console.error('Network Error:', error.message);
       throw new Error('Network error. Please check your connection.');
     }
 
@@ -80,21 +52,14 @@ api.interceptors.response.use(
     
     switch (status) {
       case 401:
-        // Unauthorized - this is expected for unauthenticated users
-        console.log('User not authenticated - Status 401');
-        console.log('Response data:', data);
         throw new Error('Unauthorized');
       case 403:
-        console.error('Forbidden access');
         throw new Error('Access denied');
       case 404:
-        console.error('Resource not found');
         throw new Error('Resource not found');
       case 500:
-        console.error('Server error');
         throw new Error('Server error. Please try again later.');
       default:
-        console.error(`HTTP Error ${status}:`, data);
         throw new Error(data?.message || 'An unexpected error occurred');
     }
   }

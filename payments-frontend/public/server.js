@@ -13,5 +13,4 @@ app.get('*', (req, res) => {
 
 app.listen(port, () => {
   console.log(`SecurityPayments Frontend server running on port ${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
