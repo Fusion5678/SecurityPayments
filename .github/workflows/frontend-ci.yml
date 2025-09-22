@@ -103,14 +103,16 @@ jobs:
           VITE_APP_NAME="SecurityPayments Portal (Dev)" VITE_ENVIRONMENT="development" npm run build
         fi
         
-    - name: Copy web.config to dist
+    - name: Copy Node.js server files to dist
       run: |
-        cp payments-frontend/public/web.config payments-frontend/dist/web.config
-        cp payments-frontend/public/.htaccess payments-frontend/dist/.htaccess
+        cp payments-frontend/public/package.json payments-frontend/dist/package.json
+        cp payments-frontend/public/server.js payments-frontend/dist/server.js
         echo "Contents of dist folder:"
         ls -la payments-frontend/dist/
         echo "Checking if index.html exists:"
         ls -la payments-frontend/dist/index.html || echo "index.html not found!"
+        echo "Checking Node.js files:"
+        ls -la payments-frontend/dist/package.json payments-frontend/dist/server.js
         
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3
