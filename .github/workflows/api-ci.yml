@@ -14,6 +14,11 @@ on:
       - '.github/workflows/api-ci.yml'
       - '.env.ci'
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 # Environment variables will be loaded from .env.ci file in the workflow steps
 
 jobs:

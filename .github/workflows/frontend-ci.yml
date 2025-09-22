@@ -12,6 +12,11 @@ on:
       - 'payments-frontend/**'
       - '.github/workflows/frontend-ci.yml'
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 env:
   NODE_VERSION: '20'
   AZURE_APP_NAME_FRONTEND: 'ST10500143-Payments-Portal'
