@@ -177,13 +177,6 @@ var app = builder.Build();
 // Apply CORS FIRST (before any other middleware)
 app.UseCors("ReactFrontend");
 
-// Serve static files (React build) in production only
-if (app.Environment.IsProduction())
-{
-    app.UseDefaultFiles(); // Serves index.html by default
-    app.UseStaticFiles();  // Serves static files from wwwroot
-}
-
 // Handle OPTIONS requests for CORS preflight BEFORE authentication
 app.Use(async (context, next) =>
 {
@@ -266,17 +259,7 @@ app.MapControllers();
 // Add a simple health check endpoint that doesn't require any configuration
 app.MapGet("/health", () => "OK");
 
-// Environment-aware routing
-if (app.Environment.IsProduction())
-{
-    // SPA fallback routing - serve React app for all non-API routes
-    app.MapFallbackToFile("index.html");
-}
-else
-{
-    // Development - show API status
-    app.MapGet("/", () => "Payments API is running (Development)");
-}
+app.MapGet("/", () => "Payments API is running");
 
     try
     {
