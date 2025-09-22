@@ -5,12 +5,14 @@ on:
     branches: [ master, dev ]
     paths:
       - 'PaymentsAPI/**'
+      - 'payments-frontend/**'
       - '.github/workflows/api-ci.yml'
       - '.env.ci'
   pull_request:
     branches: [ master, dev ]
     paths:
       - 'PaymentsAPI/**'
+      - 'payments-frontend/**'
       - '.github/workflows/api-ci.yml'
       - '.env.ci'
 
@@ -42,8 +44,32 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: payments-frontend/package-lock.json
+          
+      - name: Install frontend dependencies
+        run: |
+          cd payments-frontend
+          npm ci
+          
+      - name: Build React Frontend
+        env:
+          NODE_ENV: production
+        run: |
+          cd payments-frontend
+          npm run build
+          
+      - name: Copy Frontend to API wwwroot
+        run: |
+          mkdir -p PaymentsAPI/wwwroot
+          cp -r payments-frontend/dist/* PaymentsAPI/wwwroot/
         
-      - name: Restore dependencies
+      - name: Restore .NET dependencies
         run: dotnet restore ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
       
       - name: Build project
@@ -52,14 +78,14 @@ jobs:
       - name: Run tests
         run: dotnet test ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity normal --collect:"XPlat Code Coverage"
       
-      - name: Publish API
-        run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ./publish/api --no-build
+      - name: Publish Combined App (API + Frontend)
+        run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ./publish/combined --no-build
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: api-build-artifacts
-          path: ./publish/api/
+          name: combined-app-artifacts
+          path: ./publish/combined/
           retention-days: 1
 
   # -------------------------
@@ -94,7 +120,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: api-build-artifacts
+          name: combined-app-artifacts
           path: ./publish/
         
       - name: Deploy to Azure WebApp

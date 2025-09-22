@@ -42,9 +42,10 @@ try
         builder.WebHost.ConfigureKestrel(options =>
         {
             options.ListenAnyIP(8080); // Only HTTP
+            options.AddServerHeader = false; // Remove Server header for security
             // Do NOT call options.ListenAnyIP(443) or UseHttps()
         });
-        Console.WriteLine("Kestrel configured for HTTP on port 8080");
+        Console.WriteLine("Kestrel configured for HTTP on port 8080 with security headers");
     }
 
     // Add logging to help diagnose startup issues
@@ -176,6 +177,13 @@ var app = builder.Build();
 // Apply CORS FIRST (before any other middleware)
 app.UseCors("ReactFrontend");
 
+// Serve static files (React build) in production only
+if (app.Environment.IsProduction())
+{
+    app.UseDefaultFiles(); // Serves index.html by default
+    app.UseStaticFiles();  // Serves static files from wwwroot
+}
+
 // Handle OPTIONS requests for CORS preflight BEFORE authentication
 app.Use(async (context, next) =>
 {
@@ -194,16 +202,23 @@ if (!app.Environment.IsProduction())
   app.UseHttpsRedirection();
 }
 
-// Apply security headers globally
+// Apply production-grade security headers globally
 app.Use(async (context, next) =>
 {
     var securityConfig = app.Configuration.GetSection("Security");
+    
+    // Generate unique nonce per request for CSP
+    var nonce = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+    context.Items["csp-nonce"] = nonce;
     
     // Prevent MIME sniffing
     context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
 
     // XSS protection (older browsers, harmless to include)
     context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+
+    // Frame options (prevent clickjacking)
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
 
     // Add HSTS (HTTP Strict Transport Security) header to enforce HTTPS and protect against protocol downgrade attacks
     var hstsMaxAge = securityConfig["HstsMaxAge"];
@@ -216,13 +231,27 @@ app.Use(async (context, next) =>
 
     context.Response.Headers.Add("Strict-Transport-Security", hstsValue);   
 
-    // Content Security Policy
-    var csp = securityConfig["ContentSecurityPolicy"];
+    // Content Security Policy - maximum security for JSON API
+    var cspTemplate = securityConfig["ContentSecurityPolicy"];
+    var csp = cspTemplate?.Replace("{NONCE}", nonce) ?? 
+              $"default-src 'none'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; media-src 'none'; child-src 'none'";
     context.Response.Headers.Add("Content-Security-Policy", csp);
+
+    // Permissions Policy - restrict dangerous APIs
+    context.Response.Headers.Add("Permissions-Policy", 
+        "geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=(self), sync-xhr=()");
 
     // Referrer policy
     var referrerPolicy = securityConfig["ReferrerPolicy"];
     context.Response.Headers.Add("Referrer-Policy", referrerPolicy);
+
+    // Cross-Origin policies (more permissive in development)
+    if (app.Environment.IsProduction())
+    {
+        context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+        context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+        context.Response.Headers.Add("Cross-Origin-Resource-Policy", "same-origin");
+    }
 
     await next();
 });
@@ -236,7 +265,18 @@ app.MapControllers();
 
 // Add a simple health check endpoint that doesn't require any configuration
 app.MapGet("/health", () => "OK");
-app.MapGet("/", () => "Payments API is running");
+
+// Environment-aware routing
+if (app.Environment.IsProduction())
+{
+    // SPA fallback routing - serve React app for all non-API routes
+    app.MapFallbackToFile("index.html");
+}
+else
+{
+    // Development - show API status
+    app.MapGet("/", () => "Payments API is running (Development)");
+}
 
     try
     {

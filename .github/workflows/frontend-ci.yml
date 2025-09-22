@@ -42,12 +42,29 @@ jobs:
         cd payments-frontend
         npm run lint
         
-    - name: Build frontend
+    - name: Build React Frontend
+      env:
+        NODE_ENV: production
       run: |
         cd payments-frontend
         npm run build
         
-    - name: Upload frontend artifacts
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Copy Frontend to API wwwroot
+      run: |
+        mkdir -p PaymentsAPI/wwwroot
+        cp -r payments-frontend/dist/* PaymentsAPI/wwwroot/
+        
+    - name: Build .NET API (with frontend included)
+      run: |
+        cd PaymentsAPI
+        dotnet publish --configuration Release --output ../publish/combined
+        
+    - name: Upload combined artifacts
       uses: actions/upload-artifact@v4
       with:
         name: frontend-artifacts
@@ -73,6 +90,6 @@ jobs:
     - name: Deploy to Azure App Service (Production)
       uses: azure/webapps-deploy@v2
       with:
-        app-name: ${{ secrets.AZURE_APP_NAME_FRONTEND_PROD }}
+        app-name: ${{ env.AZURE_APP_NAME_FRONTEND_PROD }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_FRONTEND_PROD }}
         package: ./publish/frontend/
