@@ -24,6 +24,7 @@ namespace PaymentsAPI.Controllers
         /// Register a new customer account
         /// </summary>
         [HttpPost("register")]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult<UserResponseDto>> Register([FromBody] UserRegistrationDto registrationDto)
         {
             try

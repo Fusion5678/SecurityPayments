@@ -170,10 +170,18 @@ const BankAccountsPage: React.FC = () => {
 
     try {
       await bankAccountAPI.delete(id);
-      setBankAccounts(prev => prev.filter(account => account.bankAccountId !== id));
-      setSuccess('Bank account deleted successfully!');
+      setBankAccounts(prev => prev.filter(account => account.accountID !== id));
+      addNotification({
+        type: 'success',
+        title: 'Account Deleted',
+        message: 'Bank account deleted successfully!'
+      });
     } catch (error: any) {
-      setError(error.message || 'Failed to delete bank account. Please try again.');
+      addNotification({
+        type: 'error',
+        title: 'Deletion Failed',
+        message: error.message || 'Failed to delete bank account. Please try again.'
+      });
     }
   };
 
@@ -353,11 +361,14 @@ const BankAccountsPage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {bankAccounts.map((account) => (
-                <div key={account.bankAccountId} className="card">
+                <div key={account.accountID} className="card">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {account.bankName}
+                      {account.accountType} Account
                     </h3>
+                    <div className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                      {account.currencyCode}
+                    </div>
                   </div>
 
                   <div className="space-y-3">
@@ -367,8 +378,8 @@ const BankAccountsPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <p className="text-sm text-gray-500">Account Holder</p>
-                      <p className="text-sm text-gray-900">{account.accountHolderName}</p>
+                      <p className="text-sm text-gray-500">Account Type</p>
+                      <p className="text-sm text-gray-900">{account.accountType}</p>
                     </div>
 
                     <div>
@@ -389,7 +400,7 @@ const BankAccountsPage: React.FC = () => {
 
                   <div className="mt-6 pt-4 border-t border-gray-200">
                     <button
-                      onClick={() => handleDelete(account.bankAccountId)}
+                      onClick={() => handleDelete(account.accountID)}
                       className="btn-danger w-full"
                     >
                       Delete Account
