@@ -15,11 +15,10 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
 
-  // Add CSRF token for state-changing requests (except for login, logout, and CSRF token requests)
+  // Add CSRF token for state-changing requests (except for login and CSRF token requests)
   if (config.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method.toUpperCase()) && 
       !config.url?.includes('/auth/csrf-token') && 
-      !config.url?.includes('/auth/login') && 
-      !config.url?.includes('/auth/logout')) {
+      !config.url?.includes('/auth/login')) {
       try {
         const csrfResponse = await api.get('/auth/csrf-token');
         if (csrfResponse.data?.token) {
