@@ -9,7 +9,7 @@ This report provides an overview of the security architecture and protections im
 The backend (ASP.NET Core API) implements multi-layered security controls:
 
 ### Program.cs
-- Enforces cookie security policies: **HttpOnly**, **Secure**, **SameSite**
+- Enforces cookie security policies: **HttpOnly**, **Secure**
 - Security middleware:
   - HTTPS redirection (production only)
   - CORS policies (restricted origins for dev vs production)
@@ -33,8 +33,8 @@ The backend (ASP.NET Core API) implements multi-layered security controls:
 ### appsettings.json & appsettings.Production.json
 - Store JWT secrets, cookie expiration settings, and authentication configuration
 - Environment-specific security configurations (production vs local dev)
-- **Development**: Relaxed CORS origins, Lax SameSite cookies, detailed logging
-- **Production**: Restricted CORS origins, Strict SameSite cookies, minimal logging
+- **Development**: Relaxed CORS origins, detailed logging
+- **Production**: Restricted CORS origins, minimal logging
 - **Kestrel HTTPS Configuration**: Explicit HTTPS endpoint binding
 
 ## 2. Frontend Security
@@ -80,7 +80,7 @@ The project implements a defense-in-depth approach, including:
 ### Authentication & Session Security
 - **BCrypt** password hashing
 - JWT tokens with expiration
-- **HttpOnly**, **Secure**, **SameSite** cookies
+- **HttpOnly**, **Secure** cookies
 - Sliding expiration for persistent sessions
 
 ### Input Validation & Sanitization
@@ -97,7 +97,13 @@ The project implements a defense-in-depth approach, including:
 
 ### Database Security
 - EF Core parameterized queries prevent SQL injection
-- **SQL Connection Encryption**: To be implemented for production database connections
+- **SQL Connection Encryption**: Encrypted with azure
+
+### Rate Limiting
+- **Login Protection**: 5 attempts per minute per IP (3 in production)
+- **Registration Protection**: 3 attempts per minute per IP (2 in production)  
+- **Global Protection**: 100 requests per minute per IP (60 in production)
+- **Built-in .NET Rate Limiter**: Production-ready, memory efficient
 
 ### Security Headers
 - **HSTS**: HTTP Strict Transport Security with configurable max-age, subdomains, and preload
@@ -128,7 +134,7 @@ By combining these measures, the system is protected against:
 - **SQL Injection** → prevented by EF Core parameterized queries
 - **Cross-Site Scripting (XSS)** → mitigated with input sanitization + CSP headers + X-XSS-Protection
 - **Cross-Site Request Forgery (CSRF)** → mitigated with anti-forgery tokens + X-Requested-With headers
-- **Session Hijacking** → mitigated by HttpOnly/Secure cookies, JWT expiration, and SameSite policies
+- **Session Hijacking** → mitigated by HttpOnly/Secure cookies, JWT expiration
 - **Man-in-the-Middle (MITM)** → prevented by HTTPS + HSTS + protocol downgrade protection
 - **Unauthorized Access** → blocked by `[Authorize]` attributes + frontend route guards
 - **Clickjacking** → prevented by CSP frame-ancestors 'none'
@@ -136,6 +142,8 @@ By combining these measures, the system is protected against:
 - **Information Disclosure** → prevented by error message sanitization and no-referrer policy
 - **Request Timeout Attacks** → prevented by configurable timeout limits
 - **Network-based Attacks** → mitigated by CORS policies and credential management
+- **Brute Force Attacks** → mitigated by rate limiting (5 login attempts/minute, 3 registration attempts/minute)
+- **DDoS Attacks** → mitigated by global rate limiting (100 requests/minute per IP)
 
 ## 6. Conclusion
 

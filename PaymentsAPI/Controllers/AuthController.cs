@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.RateLimiting;
 using PaymentsAPI.DTOs;
 using PaymentsAPI.Services;
 using System.Security.Claims;
@@ -25,6 +26,7 @@ namespace PaymentsAPI.Controllers
         /// </summary>
         [HttpPost("register")]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("RegisterLimiter")]
         public async Task<ActionResult<UserResponseDto>> Register([FromBody] UserRegistrationDto registrationDto)
         {
             try
@@ -42,6 +44,7 @@ namespace PaymentsAPI.Controllers
         /// Login with username and password
         /// </summary>
         [HttpPost("login")]
+        [EnableRateLimiting("AuthLimiter")]
         public async Task<ActionResult<UserResponseDto>> Login([FromBody] UserLoginDto loginDto)
         {
             var user = await _authService.LoginAsync(loginDto);

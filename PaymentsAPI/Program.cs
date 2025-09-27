@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using PaymentsAPI.Data;
 using PaymentsAPI.Services;
 using System.Text.RegularExpressions;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,43 @@ builder.Services.AddAuthentication("Cookies")
 // Add Authorization
 builder.Services.AddAuthorization();
 
+// Add Rate Limiting
+builder.Services.AddRateLimiter(rateLimiterOptions =>
+{
+    // Global rate limiting for all requests
+    rateLimiterOptions.AddFixedWindowLimiter("GlobalLimiter", options =>
+    {
+        options.PermitLimit = 100; // 100 requests per minute per IP
+        options.Window = TimeSpan.FromMinutes(1);
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 0; // No queuing - reject immediately
+    });
+    
+    // Strict rate limiting for authentication endpoints
+    rateLimiterOptions.AddFixedWindowLimiter("AuthLimiter", options =>
+    {
+        options.PermitLimit = 5; // 5 login attempts per minute per IP
+        options.Window = TimeSpan.FromMinutes(1);
+        options.QueueLimit = 0; // No queuing - reject immediately
+    });
+    
+    // Moderate rate limiting for registration
+    rateLimiterOptions.AddFixedWindowLimiter("RegisterLimiter", options =>
+    {
+        options.PermitLimit = 3; // 3 registration attempts per minute per IP
+        options.Window = TimeSpan.FromMinutes(1);
+        options.QueueLimit = 0;
+    });
+
+    // Configure rejection response
+    rateLimiterOptions.RejectionStatusCode = 429; // Too Many Requests
+    rateLimiterOptions.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken: token);
+    };
+});
+
 // Add CSRF Protection
 builder.Services.AddAntiforgery(options =>
 {
@@ -122,11 +161,11 @@ var app = builder.Build();
 // --------------------
 // Configure the HTTP request pipeline
 // --------------------
-//if (app.Environment.IsDevelopment())
-//{
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI();
-//}
+}
 
 // Apply CORS FIRST (before any other middleware)
 app.UseCors("ReactFrontend");
@@ -206,6 +245,9 @@ app.Use(async (context, next) =>
 // Apply Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add Rate Limiting (after authentication to avoid conflicts)
+app.UseRateLimiter();
 
 // Map controllers
 app.MapControllers();

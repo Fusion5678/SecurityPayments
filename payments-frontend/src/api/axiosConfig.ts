@@ -59,6 +59,8 @@ api.interceptors.response.use(
         throw new Error('Access denied');
       case 404:
         throw new Error('Resource not found');
+      case 429:
+        throw new Error('Too many requests. Please wait a moment and try again.');
       case 500:
         throw new Error('Server error. Please try again later.');
       default:
