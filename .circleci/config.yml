@@ -106,13 +106,7 @@ jobs:
             echo "🎯 Ready for SonarQube analysis"
 
       # Run SonarCloud analysis using orb
-      - sonarcloud/scan:
-          project_root: .
-          additional-properties: |
-            sonar.projectKey=$SONAR_PROJECT_KEY
-            sonar.organization=$SONAR_ORGANIZATION
-            sonar.sources=PaymentsAPI,payments-frontend/src
-            sonar.exclusions=**/node_modules/**,**/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/*.min.js,**/coverage/**,**/dist/**,**/build/**,**/*.Designer.cs,**/*.test.tsx,**/*.test.ts
+      - sonarcloud/scan
 
       # Summary
       - run:
