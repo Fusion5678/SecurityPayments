@@ -9,10 +9,21 @@ jobs:
       - image: cimg/openjdk:17.0
     resource_class: medium
     working_directory: ~/project
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     
     steps:
       - checkout:
           fetch-depth: 0  # Full git history for better analysis
+
+      # Verify Java version
+      - run:
+          name: Verify Java Version
+          command: |
+            echo "🔍 Checking Java version..."
+            java -version
+            echo "JAVA_HOME: $JAVA_HOME"
+            echo "✅ Java environment ready"
 
       # Install .NET SDK 8.0
       - run:
