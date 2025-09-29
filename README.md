@@ -39,12 +39,14 @@ For detailed information on implemented security measures, please see SECURITY.m
 
 ## Technology Stack
 
-- **Backend**: ASP.NET Core 8 Web API with Entity Framework Core
-- **Frontend**: React with TypeScript and Tailwind CSS
-- **Database**: SQL Server
-- **Payment Network**: Dummy SWIFT API integration for testing
+- **Backend**: ASP.NET Core 8 Web API with Entity Framework Core (Hosted on Azure App Service)
+- **Frontend**: React with TypeScript, Vite, and Tailwind CSS (Hosted on Azure App Service)
+- **Database**: Azure SQL Server with SQL Database
+- **Cloud Platform**: Microsoft Azure
+- **CI/CD**: GitHub Actions with automated deployment
+- **Payment Network**: Dummy SWIFT API integration for
 
 ## Implementation Status
 
 -**Currently Implemented**: Customer Portal with registration, login, bank account management, profile management, payment creation
--**Still to be Implemented**: Employee portal,Azure deployment and DevSecOps pipeline for deployment and continuous security monitoring
+-**Still to be Implemented**: Employee portal, circleci
