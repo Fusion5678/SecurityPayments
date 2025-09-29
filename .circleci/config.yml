@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.1.1
+
 jobs:
   sonarqube-analysis:
     docker:
@@ -102,31 +105,13 @@ jobs:
             find . \( -type f -name "*.tsx" -o -name "*.ts" \) | head -10 || true
             echo "🎯 Ready for SonarQube analysis"
 
-      # Install SonarScanner CLI (fixed PATH issue)
-      - run:
-          name: Install SonarScanner CLI
-          command: |
-            echo "📦 Installing SonarScanner CLI..."
-            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-            unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-            sudo mv sonar-scanner-4.8.0.2856 /opt/sonar-scanner
-            sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
-            sonar-scanner --version
-            echo "✅ SonarScanner CLI installed"
-
-      # Run SonarCloud analysis
-      - run:
-          name: Run SonarCloud Analysis
-          command: |
-            echo "🔍 Running SonarCloud analysis..."
-            sonar-scanner \
-              -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-              -Dsonar.organization=$SONAR_ORGANIZATION \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN \
-              -Dsonar.sources=PaymentsAPI,payments-frontend/src \
-              -Dsonar.exclusions="**/node_modules/**,**/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/*.min.js,**/coverage/**,**/dist/**,**/build/**,**/*.Designer.cs,**/*.test.tsx,**/*.test.ts"
-            echo "✅ SonarCloud analysis completed"
+      # Run SonarCloud analysis using orb
+      - sonarcloud/scan:
+          projectKey: $SONAR_PROJECT_KEY
+          organization: $SONAR_ORGANIZATION
+          additional-properties: |
+            sonar.sources=PaymentsAPI,payments-frontend/src
+            sonar.exclusions=**/node_modules/**,**/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/*.min.js,**/coverage/**,**/dist/**,**/build/**,**/*.Designer.cs,**/*.test.tsx,**/*.test.ts
 
       # Summary
       - run:
