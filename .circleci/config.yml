@@ -136,7 +136,7 @@ jobs:
           name: Build Solution for Analysis
           command: |
             echo "🔨 Building solution for SonarCloud analysis..."
-            dotnet build SecurityPayments.sln --configuration Release
+            dotnet build PaymentsAPI/PaymentsAPI.sln --configuration Release
             echo "✅ Solution built for analysis"
 
       # End analysis
