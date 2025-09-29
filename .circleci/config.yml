@@ -119,14 +119,13 @@ jobs:
           name: Run SonarCloud Analysis
           command: |
             echo "🔍 Running SonarCloud analysis..."
-            export PATH="$PATH:/opt/sonar-scanner/bin"
             sonar-scanner \
               -Dsonar.projectKey=$SONAR_PROJECT_KEY \
               -Dsonar.organization=$SONAR_ORGANIZATION \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.login=$SONAR_TOKEN \
               -Dsonar.sources=PaymentsAPI,payments-frontend/src \
-              -Dsonar.exclusions="**/node_modules/**,**/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/*.min.js,**/coverage/**,**/dist/**,**/build/**"
+              -Dsonar.exclusions="**/node_modules/**,**/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/*.min.js,**/coverage/**,**/dist/**,**/build/**,**/*.Designer.cs,**/*.test.tsx,**/*.test.ts"
             echo "✅ SonarCloud analysis completed"
 
       # Summary
