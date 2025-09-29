@@ -27,88 +27,6 @@ jobs:
             java -version
             echo "✅ Java 17 environment ready"
 
-      # Install .NET SDK 8.0
-      - run:
-          name: Install .NET SDK
-          command: |
-            wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-            sudo dpkg -i packages-microsoft-prod.deb
-            sudo apt-get update
-            sudo apt-get install -y dotnet-sdk-8.0
-
-      # Install Node.js 18
-      - run:
-          name: Install Node.js
-          command: |
-            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-
-      # Cache .NET packages
-      - restore_cache:
-          keys:
-            - dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
-            - dotnet-deps-v1-
-
-      # Cache Node modules  
-      - restore_cache:
-          keys:
-            - node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
-            - node-deps-v1-
-
-      # Install .NET dependencies
-      - run:
-          name: Install .NET dependencies
-          command: |
-            cd PaymentsAPI
-            dotnet restore
-            echo "✅ .NET packages restored"
-
-      # Install Node dependencies
-      - run:
-          name: Install Node dependencies
-          command: |
-            cd payments-frontend
-            npm ci
-            echo "✅ Node dependencies installed"
-
-      # Save caches for faster future builds
-      - save_cache:
-          key: dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
-          paths:
-            - ~/.nuget/packages
-
-      - save_cache:
-          key: node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
-          paths:
-            - payments-frontend/node_modules
-
-      # Build .NET API (required for SonarQube analysis)
-      - run:
-          name: Build .NET API
-          command: |
-            cd PaymentsAPI
-            echo "🔨 Building .NET API..."
-            dotnet build --configuration Release --no-restore --verbosity minimal
-            echo "✅ API build completed"
-
-      # Build React Frontend
-      - run:
-          name: Build React Frontend
-          command: |
-            cd payments-frontend
-            echo "🔨 Building React Frontend..."
-            npm run build
-            echo "✅ Frontend build completed"
-
-      # Run ESLint for additional code quality insights
-      - run:
-          name: Run ESLint Code Quality Check
-          command: |
-            cd payments-frontend
-            echo "🔍 Running ESLint analysis..."
-            npm run lint || echo "⚠️ ESLint found issues (non-blocking)"
-          continue-on-error: true
-
       # Display project structure safely
       - run:
           name: Display Project Structure
@@ -118,38 +36,108 @@ jobs:
             find . \( -type f -name "*.tsx" -o -name "*.ts" \) | head -10 || true
             echo "🎯 Ready for SonarQube analysis"
 
-      # Install SonarScanner CLI with Java 17
+      # COMMENTED OUT FOR SONARQUBE TESTING ONLY
+      # # Install .NET SDK 8.0
+      # - run:
+      #     name: Install .NET SDK
+      #     command: |
+      #       wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+      #       sudo dpkg -i packages-microsoft-prod.deb
+      #       sudo apt-get update
+      #       sudo apt-get install -y dotnet-sdk-8.0
+
+      # # Install Node.js 18
+      # - run:
+      #     name: Install Node.js
+      #     command: |
+      #       curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+      #       sudo apt-get install -y nodejs
+
+      # # Cache .NET packages
+      # - restore_cache:
+      #     keys:
+      #       - dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
+      #       - dotnet-deps-v1-
+
+      # # Cache Node modules  
+      # - restore_cache:
+      #     keys:
+      #       - node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
+      #       - node-deps-v1-
+
+      # # Install .NET dependencies
+      # - run:
+      #     name: Install .NET dependencies
+      #     command: |
+      #       cd PaymentsAPI
+      #       dotnet restore
+      #       echo "✅ .NET packages restored"
+
+      # # Install Node dependencies
+      # - run:
+      #     name: Install Node dependencies
+      #     command: |
+      #       cd payments-frontend
+      #       npm ci
+      #       echo "✅ Node dependencies installed"
+
+      # # Save caches for faster future builds
+      # - save_cache:
+      #     key: dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
+      #     paths:
+      #       - ~/.nuget/packages
+
+      # - save_cache:
+      #     key: node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
+      #     paths:
+      #       - payments-frontend/node_modules
+
+      # # Build .NET API (required for SonarQube analysis)
+      # - run:
+      #     name: Build .NET API
+      #     command: |
+      #       cd PaymentsAPI
+      #       echo "🔨 Building .NET API..."
+      #       dotnet build --configuration Release --no-restore --verbosity minimal
+      #       echo "✅ API build completed"
+
+      # # Build React Frontend
+      # - run:
+      #     name: Build React Frontend
+      #     command: |
+      #       cd payments-frontend
+      #       echo "🔨 Building React Frontend..."
+      #       npm run build
+      #       echo "✅ Frontend build completed"
+
+      # # Run ESLint for additional code quality insights
+      # - run:
+      #     name: Run ESLint Code Quality Check
+      #     command: |
+      #       cd payments-frontend
+      #       echo "🔍 Running ESLint analysis..."
+      #       npm run lint || echo "⚠️ ESLint found issues (non-blocking)"
+      #     continue-on-error: true
+
+      # Run SonarCloud analysis using Docker
       - run:
-          name: Install SonarScanner CLI
+          name: Run SonarCloud Analysis with Docker
           command: |
-            echo "📦 Installing SonarScanner CLI with Java 17..."
+            echo "🔍 Running SonarCloud analysis using Docker..."
             # Ensure Java 17 is active
             export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
             export PATH=$JAVA_HOME/bin:$PATH
             echo "Using Java version:"
             java -version
             
-            # Download and install SonarScanner
-            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-            unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-            sudo mv sonar-scanner-4.8.0.2856 /opt/sonar-scanner
-            sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
-            
-            # Verify installation
-            sonar-scanner --version
-            echo "✅ SonarScanner CLI installed with Java 17"
-
-      # Run SonarCloud analysis manually
-      - run:
-          name: Run SonarCloud Analysis
-          command: |
-            echo "🔍 Running SonarCloud analysis with Java 17..."
-            # Ensure Java 17 is active
-            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-            export PATH=$JAVA_HOME/bin:$PATH
-            
-            # Run SonarScanner
-            sonar-scanner \
+            # Run SonarScanner using Docker
+            docker run --rm \
+              -v $(pwd):/usr/src \
+              -w /usr/src \
+              -e SONAR_TOKEN=$SONAR_TOKEN \
+              -e SONAR_PROJECT_KEY=$SONAR_PROJECT_KEY \
+              -e SONAR_ORGANIZATION=$SONAR_ORGANIZATION \
+              sonarsource/sonar-scanner-cli:latest \
               -Dsonar.projectKey=$SONAR_PROJECT_KEY \
               -Dsonar.organization=$SONAR_ORGANIZATION \
               -Dsonar.host.url=https://sonarcloud.io \
