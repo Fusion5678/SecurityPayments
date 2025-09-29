@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  sonarcloud: sonarsource/sonarcloud@1.1.1
+  sonarcloud: sonarsource/sonarcloud@1.2.1
 
 jobs:
   sonarqube-analysis:
@@ -16,14 +16,19 @@ jobs:
       - checkout:
           fetch-depth: 0  # Full git history for better analysis
 
-      # Verify Java version
+      # Verify Java version and ensure Java 17
       - run:
           name: Verify Java Version
           command: |
             echo "🔍 Checking Java version..."
             java -version
             echo "JAVA_HOME: $JAVA_HOME"
-            echo "✅ Java environment ready"
+            # Ensure we're using Java 17
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            echo "Updated JAVA_HOME: $JAVA_HOME"
+            java -version
+            echo "✅ Java 17 environment ready"
 
       # Install .NET SDK 8.0
       - run:
@@ -115,6 +120,15 @@ jobs:
             find . -type f -name "*.cs" | head -10 || true
             find . \( -type f -name "*.tsx" -o -name "*.ts" \) | head -10 || true
             echo "🎯 Ready for SonarQube analysis"
+
+      # Ensure Java 17 before SonarCloud scan
+      - run:
+          name: Prepare Java 17 for SonarCloud
+          command: |
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            echo "JAVA_HOME set to: $JAVA_HOME"
+            java -version
 
       # Run SonarCloud analysis using orb
       - sonarcloud/scan
