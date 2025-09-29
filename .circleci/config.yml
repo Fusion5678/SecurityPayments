@@ -122,6 +122,14 @@ jobs:
       #       npm run lint || echo "⚠️ ESLint found issues (non-blocking)"
       #     continue-on-error: true
 
+      # Switch to Java 17 for SonarScanner
+      - run:
+          name: Switch to Java 17 for SonarScanner
+          command: |
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            java -version
+
       # Run SonarCloud analysis using orb
       - sonarcloud/scan
 
