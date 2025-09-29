@@ -107,26 +107,44 @@ jobs:
             npm run lint || echo "⚠️ ESLint found issues (non-blocking)"
           continue-on-error: true
 
-      # Install SonarScanner CLI (simplified approach)
+      # Install SonarScanner for .NET
       - run:
-          name: Install SonarScanner CLI
+          name: Install SonarScanner for .NET
           command: |
-            echo "📦 Installing SonarScanner CLI..."
-            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-            unzip sonar-scanner-cli-*.zip
-            mv sonar-scanner-5.0.1.3006-linux $HOME/sonar-scanner
-            export PATH=$HOME/sonar-scanner/bin:$PATH
-            sonar-scanner --version
+            echo "📦 Installing SonarScanner for .NET..."
+            dotnet tool install --global dotnet-sonarscanner
+            export PATH="$PATH:/home/circleci/.dotnet/tools"
+            echo "✅ SonarScanner for .NET installed"
 
-      # Run SonarCloud analysis
+      # Begin analysis
       - run:
-          name: Run SonarCloud Analysis
+          name: SonarScanner Begin
           command: |
-            echo "🔍 Running SonarCloud analysis..."
-            export PATH=$HOME/sonar-scanner/bin:$PATH
-            sonar-scanner \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN
+            echo "🔍 Starting SonarCloud analysis..."
+            export PATH="$PATH:/home/circleci/.dotnet/tools"
+            dotnet sonarscanner begin \
+              /k:"Fusion5678_SecurityPayments" \
+              /o:"fusion5678" \
+              /d:sonar.host.url="https://sonarcloud.io" \
+              /d:sonar.login="$SONAR_TOKEN"
+            echo "✅ SonarScanner analysis started"
+
+      # Build your solution (required for .NET SonarScanner)
+      - run:
+          name: Build Solution for Analysis
+          command: |
+            echo "🔨 Building solution for SonarCloud analysis..."
+            cd PaymentsAPI
+            dotnet build --configuration Release
+            echo "✅ Solution built for analysis"
+
+      # End analysis
+      - run:
+          name: SonarScanner End
+          command: |
+            echo "🏁 Completing SonarCloud analysis..."
+            export PATH="$PATH:/home/circleci/.dotnet/tools"
+            dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
             echo "✅ SonarCloud analysis completed"
 
       # Summary
