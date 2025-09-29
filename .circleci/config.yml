@@ -6,29 +6,29 @@ orbs:
 jobs:
   sonarqube-analysis:
     docker:
-      - image: cimg/openjdk:11.0
+      - image: cimg/openjdk:17.0
     resource_class: medium
     working_directory: ~/project
     environment:
-      JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     
     steps:
       - checkout:
           fetch-depth: 0  # Full git history for better analysis
 
-      # Verify Java version and ensure Java 11
+      # Verify Java version and ensure Java 17
       - run:
           name: Verify Java Version
           command: |
             echo "🔍 Checking Java version..."
             java -version
             echo "JAVA_HOME: $JAVA_HOME"
-            # Ensure we're using Java 11
-            export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+            # Ensure we're using Java 17
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
             export PATH=$JAVA_HOME/bin:$PATH
             echo "Updated JAVA_HOME: $JAVA_HOME"
             java -version
-            echo "✅ Java 11 environment ready"
+            echo "✅ Java 17 environment ready"
 
       # Display project structure safely
       - run:

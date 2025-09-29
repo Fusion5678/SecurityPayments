@@ -20,7 +20,7 @@
 2. Security Scans: TruffleHog, npm audit, audit-ci
 3. Lint with ESLint
 4. Production build with Vite
-5. Deploy to Azure App Service → **Frontend Portal**
+5. Deploy to Azure App Service → **Payments Portal**
    - **Frontend URL**: https://st10500143-payments-portal.azurewebsites.net
 
 
