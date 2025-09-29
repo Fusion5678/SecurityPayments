@@ -36,9 +36,7 @@ jobs:
       - name: Security - Secret Scanning
         uses: trufflesecurity/trufflehog@main
         with:
-          path: ./
-          base: master
-          head: HEAD
+          path: ./PaymentsAPI
           extra_args: --debug --only-verified
           
       - name: Security - Initialize CodeQL

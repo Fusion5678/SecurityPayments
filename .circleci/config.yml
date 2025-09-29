@@ -93,16 +93,16 @@ jobs:
             npm run lint || echo "⚠️ ESLint found issues (non-blocking)"
           continue-on-error: true
 
-      # Display project structure for debugging
+      # Display project structure safely
       - run:
           name: Display Project Structure
           command: |
             echo "📁 Project Structure:"
-            find . -type f -name "*.cs" | head -10
-            find . -type f -name "*.tsx" -o -name "*.ts" | head -10
+            find . -type f -name "*.cs" | head -10 || true
+            find . \( -type f -name "*.tsx" -o -name "*.ts" \) | head -10 || true
             echo "🎯 Ready for SonarQube analysis"
 
-      # Install SonarScanner CLI
+      # Install SonarScanner CLI (fixed PATH issue)
       - run:
           name: Install SonarScanner CLI
           command: |
@@ -110,8 +110,8 @@ jobs:
             wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
             unzip sonar-scanner-cli-4.8.0.2856-linux.zip
             sudo mv sonar-scanner-4.8.0.2856 /opt/sonar-scanner
-            echo 'export PATH="$PATH:/opt/sonar-scanner/bin"' >> ~/.bashrc
-            export PATH="$PATH:/opt/sonar-scanner/bin"
+            sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
+            sonar-scanner --version
             echo "✅ SonarScanner CLI installed"
 
       # Run SonarCloud analysis

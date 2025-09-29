@@ -35,9 +35,7 @@ jobs:
     - name: Security - Secret Scanning
       uses: trufflesecurity/trufflehog@main
       with:
-        path: ./
-        base: master
-        head: HEAD
+        path: ./payments-frontend
         extra_args: --debug --only-verified
       
     - name: Setup Node.js
