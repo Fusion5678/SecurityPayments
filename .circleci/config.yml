@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
-
 jobs:
   sonarqube-analysis:
     docker:
@@ -105,8 +102,32 @@ jobs:
             find . -type f -name "*.tsx" -o -name "*.ts" | head -10
             echo "🎯 Ready for SonarQube analysis"
 
+      # Install SonarScanner CLI
+      - run:
+          name: Install SonarScanner CLI
+          command: |
+            echo "📦 Installing SonarScanner CLI..."
+            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+            unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+            sudo mv sonar-scanner-4.8.0.2856 /opt/sonar-scanner
+            echo 'export PATH="$PATH:/opt/sonar-scanner/bin"' >> ~/.bashrc
+            export PATH="$PATH:/opt/sonar-scanner/bin"
+            echo "✅ SonarScanner CLI installed"
+
       # Run SonarCloud analysis
-      - sonarcloud/scan
+      - run:
+          name: Run SonarCloud Analysis
+          command: |
+            echo "🔍 Running SonarCloud analysis..."
+            export PATH="$PATH:/opt/sonar-scanner/bin"
+            sonar-scanner \
+              -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+              -Dsonar.organization=$SONAR_ORGANIZATION \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.login=$SONAR_TOKEN \
+              -Dsonar.sources=PaymentsAPI,payments-frontend/src \
+              -Dsonar.exclusions="**/node_modules/**,**/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/*.min.js,**/coverage/**,**/dist/**,**/build/**"
+            echo "✅ SonarCloud analysis completed"
 
       # Summary
       - run:
