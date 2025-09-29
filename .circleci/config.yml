@@ -25,88 +25,87 @@ jobs:
             find . \( -type f -name "*.tsx" -o -name "*.ts" \) | head -10 || true
             echo "🎯 Ready for SonarQube analysis"
 
-      # COMMENTED OUT FOR SONARQUBE TESTING ONLY
-      # # Install .NET SDK 8.0
-      # - run:
-      #     name: Install .NET SDK
-      #     command: |
-      #       wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-      #       sudo dpkg -i packages-microsoft-prod.deb
-      #       sudo apt-get update
-      #       sudo apt-get install -y dotnet-sdk-8.0
+      # Install .NET SDK 8.0
+      - run:
+          name: Install .NET SDK
+          command: |
+            wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+            sudo dpkg -i packages-microsoft-prod.deb
+            sudo apt-get update
+            sudo apt-get install -y dotnet-sdk-8.0
 
-      # # Install Node.js 18
-      # - run:
-      #     name: Install Node.js
-      #     command: |
-      #       curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-      #       sudo apt-get install -y nodejs
+      # Install Node.js 18
+      - run:
+          name: Install Node.js
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
 
-      # # Cache .NET packages
-      # - restore_cache:
-      #     keys:
-      #       - dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
-      #       - dotnet-deps-v1-
+      # Cache .NET packages
+      - restore_cache:
+          keys:
+            - dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
+            - dotnet-deps-v1-
 
-      # # Cache Node modules  
-      # - restore_cache:
-      #     keys:
-      #       - node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
-      #       - node-deps-v1-
+      # Cache Node modules  
+      - restore_cache:
+          keys:
+            - node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
+            - node-deps-v1-
 
-      # # Install .NET dependencies
-      # - run:
-      #     name: Install .NET dependencies
-      #     command: |
-      #       cd PaymentsAPI
-      #       dotnet restore
-      #       echo "✅ .NET packages restored"
+      # Install .NET dependencies
+      - run:
+          name: Install .NET dependencies
+          command: |
+            cd PaymentsAPI
+            dotnet restore
+            echo "✅ .NET packages restored"
 
-      # # Install Node dependencies
-      # - run:
-      #     name: Install Node dependencies
-      #     command: |
-      #       cd payments-frontend
-      #       npm ci
-      #       echo "✅ Node dependencies installed"
+      # Install Node dependencies
+      - run:
+          name: Install Node dependencies
+          command: |
+            cd payments-frontend
+            npm ci
+            echo "✅ Node dependencies installed"
 
-      # # Save caches for faster future builds
-      # - save_cache:
-      #     key: dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
-      #     paths:
-      #       - ~/.nuget/packages
+      # Save caches for faster future builds
+      - save_cache:
+          key: dotnet-deps-v1-{{ checksum "PaymentsAPI/PaymentsAPI.csproj" }}
+          paths:
+            - ~/.nuget/packages
 
-      # - save_cache:
-      #     key: node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
-      #     paths:
-      #       - payments-frontend/node_modules
+      - save_cache:
+          key: node-deps-v1-{{ checksum "payments-frontend/package-lock.json" }}
+          paths:
+            - payments-frontend/node_modules
 
-      # # Build .NET API (required for SonarQube analysis)
-      # - run:
-      #     name: Build .NET API
-      #     command: |
-      #       cd PaymentsAPI
-      #       echo "🔨 Building .NET API..."
-      #       dotnet build --configuration Release --no-restore --verbosity minimal
-      #       echo "✅ API build completed"
+      # Build .NET API
+      - run:
+          name: Build .NET API
+          command: |
+            cd PaymentsAPI
+            echo "🔨 Building .NET API..."
+            dotnet build --configuration Release --no-restore --verbosity minimal
+            echo "✅ API build completed"
 
-      # # Build React Frontend
-      # - run:
-      #     name: Build React Frontend
-      #     command: |
-      #       cd payments-frontend
-      #       echo "🔨 Building React Frontend..."
-      #       npm run build
-      #       echo "✅ Frontend build completed"
+      # Build React Frontend
+      - run:
+          name: Build React Frontend
+          command: |
+            cd payments-frontend
+            echo "🔨 Building React Frontend..."
+            npm run build
+            echo "✅ Frontend build completed"
 
-      # # Run ESLint for additional code quality insights
-      # - run:
-      #     name: Run ESLint Code Quality Check
-      #     command: |
-      #       cd payments-frontend
-      #       echo "🔍 Running ESLint analysis..."
-      #       npm run lint || echo "⚠️ ESLint found issues (non-blocking)"
-      #     continue-on-error: true
+      # Run ESLint for additional code quality insights
+      - run:
+          name: Run ESLint Code Quality Check
+          command: |
+            cd payments-frontend
+            echo "🔍 Running ESLint analysis..."
+            npm run lint || echo "⚠️ ESLint found issues (non-blocking)"
+          continue-on-error: true
 
       # Install SonarScanner CLI (simplified approach)
       - run:
