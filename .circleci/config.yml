@@ -128,19 +128,15 @@ jobs:
               /n:"SecurityPayments" \
               /v:"1.0" \
               /d:sonar.host.url="https://sonarcloud.io" \
-              /d:sonar.login="$SONAR_TOKEN" \
-              /d:sonar.sources="PaymentsAPI,payments-frontend/src" \
-              /d:sonar.exclusions="**/node_modules/**,**/bin/**,**/obj/**,**/Migrations/**,**/wwwroot/**,**/*.min.js,**/coverage/**,**/dist/**,**/build/**,**/packages/**,**/.git/**,**/*.Designer.cs,**/*.test.tsx,**/*.test.ts,**/Properties/**,**/*.sln,**/*.csproj" \
-              /d:sonar.qualitygate.wait="false"
+              /d:sonar.login="$SONAR_TOKEN"
             echo "✅ SonarScanner analysis started"
 
-      # Build your solution (required for .NET SonarScanner)
+      # Build the solution instead of only the csproj
       - run:
           name: Build Solution for Analysis
           command: |
             echo "🔨 Building solution for SonarCloud analysis..."
-            cd PaymentsAPI
-            dotnet build --configuration Release
+            dotnet build SecurityPayments.sln --configuration Release
             echo "✅ Solution built for analysis"
 
       # End analysis
