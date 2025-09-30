@@ -43,10 +43,10 @@ For detailed information on implemented security measures, please see SECURITY.m
 - **Frontend**: React with TypeScript, Vite, and Tailwind CSS (Hosted on Azure App Service)
 - **Database**: Azure SQL Server with SQL Database
 - **Cloud Platform**: Microsoft Azure
-- **CI/CD**: GitHub Actions with automated deployment
+- **CI/CD**: GitHub Actions with automated deployment,CircleCI 
 - **Payment Network**: Dummy SWIFT API integration for
 
 ## Implementation Status
 
 -**Currently Implemented**: Customer Portal with registration, login, bank account management, profile management, payment creation
--**Still to be Implemented**: Employee portal, circleci
+-**Still to be Implemented**: Employee portal

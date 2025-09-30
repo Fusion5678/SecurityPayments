@@ -109,8 +109,14 @@ The project implements a defense-in-depth approach, including:
 - Secure preflight OPTIONS request handling
 
 ### Database Security
-- EF Core parameterized queries prevent SQL injection
-- **SQL Connection Encryption**: Encrypted with azure
+- **EF Core Parameterized Queries**: Prevent SQL injection attacks
+- **Azure SQL Database Encryption**:
+  - **Encryption in Transit**: All connections use TLS 1.2+ encryption
+  - **Encryption at Rest**: Transparent Data Encryption (TDE) enabled
+  - **Always Encrypted**: Sensitive data encrypted at application level
+  - **Connection String Security**: Encrypted connection strings in Azure App Service
+  - **Network Security**: Azure SQL firewall rules restrict access to authorized IPs
+
 
 ### Rate Limiting
 - **Development Limits**:
@@ -212,7 +218,86 @@ The project implements a defense-in-depth approach, including:
 - **Timeout Protection**: Configurable request timeout limits
 - **Memory Management**: Efficient rate limiting with no queuing
 
-## 6. Threats Mitigated
+## 7. Security Scanning & Code Quality
+
+The project implements comprehensive security scanning at multiple stages of the development lifecycle:
+
+### Pre-Deployment Security Scans (GitHub Actions)
+
+#### API Security Pipeline (`.github/workflows/api-ci.yml`)
+- **TruffleHog Secret Scanning**: Scans for exposed secrets, API keys, and credentials
+- **CodeQL Analysis**: Static code analysis for security vulnerabilities
+- **npm audit**: Dependency vulnerability scanning for frontend packages
+- **ESLint Security Rules**: Code quality and security linting
+- **Build Verification**: Ensures code compiles without errors
+
+#### Frontend Security Pipeline (`.github/workflows/frontend-ci.yml`)
+- **TruffleHog Secret Scanning**: Scans frontend code for exposed secrets
+- **CodeQL Analysis**: JavaScript/TypeScript security analysis
+- **npm audit**: Node.js dependency vulnerability scanning
+- **ESLint Security Rules**: Frontend security linting
+- **Build Verification**: Ensures frontend builds successfully
+
+### Continuous Security Analysis (CircleCI)
+
+#### SonarCloud Analysis (`.circleci/config.yml`)
+- **Static Code Analysis**: Comprehensive code quality and security analysis
+- **Security Hotspot Detection**: Identifies potential security vulnerabilities
+- **Code Smell Detection**: Maintainability and quality issues
+- **Duplication Detection**: Code duplication analysis
+- **Multi-Language Support**: Analyzes both C# (.NET) and TypeScript/React code
+- **Build Integration**: Analyzes compiled assemblies for deeper insights
+- **Quality Gates**: Enforces security and quality standards
+
+### Security Scan Coverage
+
+#### Secret Detection
+- **TruffleHog**: Scans for hardcoded secrets, API keys, passwords, and tokens
+- **GitHub Secret Scanning**: Native GitHub secret detection
+- **Environment Variable Validation**: Ensures no secrets in code
+
+#### Code Quality & Security
+- **SonarCloud**: 
+  - Security hotspots and vulnerabilities
+  - Code smells and maintainability issues
+  - Duplication and complexity analysis
+  - Coverage analysis (when tests are added)
+- **CodeQL**: 
+  - SQL injection detection
+  - XSS vulnerability scanning
+  - Authentication bypass detection
+  - Path traversal vulnerability detection
+
+#### Dependency Security
+- **npm audit**: Node.js package vulnerability scanning
+- **NuGet Security**: .NET package vulnerability detection
+- **License Compliance**: Open source license compliance checking
+
+### Scan Execution Schedule
+- **On Every Push**: GitHub Actions run on all code changes
+- **On Pull Requests**: Full security scan before code merge
+- **Scheduled Runs**: CircleCI SonarCloud analysis on master/dev branches
+- **Manual Triggers**: On-demand security scans available
+
+### Security Metrics & Reporting
+- **SonarCloud Dashboard**: Real-time security metrics and trends
+- **GitHub Security Tab**: Vulnerability alerts and dependency insights
+- **CircleCI Reports**: Build and analysis status tracking
+- **Quality Gates**: Automated security threshold enforcement
+
+## 8. Azure Cloud Security
+
+### Azure App Service Security
+- **SSL Certificates**: Azure-managed SSL certificates for secure HTTPS connections
+- **HTTPS Enforcement**: Automatic HTTPS redirection and secure communication
+- **DDoS Protection**: Built-in Azure DDoS protection for all App Services
+
+### Azure SQL Database Security
+- **Encrypted Connection**: Secure, encrypted connection between application and database
+- **Azure Authentication**: Integrated authentication with Azure Active Directory
+- **Data Encryption**: Database encryption at rest and in transit
+
+## 9. Threats Mitigated
 
 By combining these measures, the system is protected against:
 
@@ -230,7 +315,7 @@ By combining these measures, the system is protected against:
 - **Brute Force Attacks** → mitigated by rate limiting (5 login attempts/minute, 3 registration attempts/minute)
 - **DDoS Attacks** → mitigated by global rate limiting (100 requests/minute per IP)
 
-## 7. Conclusion
+## 10. Conclusion
 
 The Payments Project implements a comprehensive, defense-in-depth security architecture with production-grade protections across both backend and frontend. The system features:
 
@@ -248,4 +333,14 @@ The Payments Project implements a comprehensive, defense-in-depth security archi
 - **Information Security**: Minimal logging, generic error messages, and no sensitive data exposure
 - **Cross-Origin Security**: Secure frontend-backend communication with proper cookie policies
 
-The project is well-prepared to resist common web application attacks including SQL injection, XSS, CSRF, session hijacking, MITM attacks, and DDoS attempts, while safeguarding sensitive payment data in a production environment.
+### Continuous Security Monitoring
+- **Automated Security Scanning**: GitHub Actions and CircleCI pipelines for continuous security assessment
+- **Multi-Tool Coverage**: TruffleHog, CodeQL, SonarCloud, and npm audit for comprehensive detection
+- **Quality Gates**: Automated enforcement of security and quality standards
+
+### Azure Cloud Security
+- **SSL Certificates**: Azure-managed SSL certificates for secure HTTPS connections
+- **Encrypted Database Connection**: Secure, encrypted connection between application and database
+- **HTTPS Enforcement**: Automatic HTTPS redirection and secure communication
+
+The project is well-prepared to resist common web application attacks including SQL injection, XSS, CSRF, session hijacking, MITM attacks, and DDoS attempts, while safeguarding sensitive payment data in a production environment. The comprehensive security scanning and Azure cloud security features provide enterprise-grade protection with continuous monitoring and automated threat detection.
