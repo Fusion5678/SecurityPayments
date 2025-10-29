@@ -36,10 +36,8 @@ jobs:
       - name: Security - Secret Scanning
         uses: trufflesecurity/trufflehog@main
         with:
-          path: ./
-          base: master
-          head: HEAD
-          extra_args: --debug --only-verified
+          args: git file://$GITHUB_WORKSPACE --fail-verified
+
           
       - name: Security - Initialize CodeQL
         uses: github/codeql-action/init@v3
