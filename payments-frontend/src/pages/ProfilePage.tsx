@@ -78,6 +78,7 @@ const ProfilePage: React.FC = () => {
       newErrors.Email = VALIDATION_MESSAGES.EMAIL_INVALID;
     }
 
+    
     // ID Number validation (for customers) using centralized regex
     if (user?.role === 'Customer' && profileForm.IDNumber && profileForm.IDNumber.trim()) {
       if (!validateIdNumber(profileForm.IDNumber)) {
