@@ -33,6 +33,12 @@ export const RECIPIENT_NAME_REGEX = /^[a-zA-Z\s'-]{2,50}$/;
 // Amount validation - positive decimal with max 2 decimal places
 export const AMOUNT_REGEX = /^\d+(\.\d{1,2})?$/;
 
+// Full name validation - letters, spaces, hyphens, apostrophes, 2-50 characters
+export const FULL_NAME_REGEX = /^[a-zA-Z\s'-]{2,50}$/;
+
+// Employee number validation - alphanumeric, 3-20 characters, can include hyphens and underscores
+export const EMPLOYEE_NUMBER_REGEX = /^[a-zA-Z0-9_-]{3,20}$/;
+
 // Validation functions
 export const validateEmail = (email: string): boolean => {
   return EMAIL_REGEX.test(email);
@@ -78,6 +84,14 @@ export const validateAmount = (amount: string): boolean => {
   return AMOUNT_REGEX.test(amount) && parseFloat(amount) > 0;
 };
 
+export const validateFullName = (fullName: string): boolean => {
+  return FULL_NAME_REGEX.test(fullName);
+};
+
+export const validateEmployeeNumber = (employeeNumber: string): boolean => {
+  return EMPLOYEE_NUMBER_REGEX.test(employeeNumber);
+};
+
 // Sanitization function to prevent XSS
 export const sanitizeInput = (input: string): string => {
   return input
@@ -107,6 +121,8 @@ export const VALIDATION_MESSAGES = {
   PAYMENT_DESCRIPTION_INVALID: 'Description contains invalid characters',
   RECIPIENT_NAME_INVALID: 'Recipient name contains invalid characters',
   AMOUNT_INVALID: 'Amount must be a positive number with max 2 decimal places',
+  FULL_NAME_INVALID: 'Full name must be 2-50 characters with letters, spaces, hyphens, or apostrophes only',
+  EMPLOYEE_NUMBER_INVALID: 'Employee number must be 3-20 alphanumeric characters, hyphens, or underscores only',
   REQUIRED: 'This field is required',
   MIN_LENGTH: (min: number) => `Minimum length is ${min} characters`,
   MAX_LENGTH: (max: number) => `Maximum length is ${max} characters`,

@@ -7,6 +7,7 @@ import {
   validateUsername, 
   validatePassword, 
   validateIdNumber,
+  validateFullName,
   sanitizeInput,
   VALIDATION_MESSAGES 
 } from '../utils/validation';
@@ -53,11 +54,11 @@ const RegisterPage: React.FC = () => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Full Name validation
+    // Full Name validation using centralized regex
     if (!formData.fullName.trim()) {
       newErrors.fullName = VALIDATION_MESSAGES.REQUIRED;
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = VALIDATION_MESSAGES.MIN_LENGTH(2);
+    } else if (!validateFullName(formData.fullName)) {
+      newErrors.fullName = VALIDATION_MESSAGES.FULL_NAME_INVALID;
     }
 
     // Username validation
