@@ -13,7 +13,7 @@ const PaymentsPage: React.FC = () => {
     const fetchPayments = async () => {
       try {
         setLoading(true);
-        const paymentsData = await paymentAPI.getAll();
+        const paymentsData = await paymentAPI.getUserPayments();
         setPayments(paymentsData);
       } catch (error: any) {
         setError(error.message || 'Failed to load payments');

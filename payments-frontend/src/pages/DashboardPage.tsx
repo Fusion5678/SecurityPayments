@@ -18,7 +18,7 @@ const DashboardPage: React.FC = () => {
         setLoading(true);
         const [accountsData, paymentsData] = await Promise.all([
           bankAccountAPI.getAll(),
-          paymentAPI.getAll()
+          paymentAPI.getUserPayments()
         ]);
         
         setBankAccounts(accountsData);

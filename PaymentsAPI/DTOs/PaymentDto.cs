@@ -38,6 +38,7 @@ namespace PaymentsAPI.DTOs
         public string Status { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string? CustomerName { get; set; } // For employee view
         public List<PaymentVerificationResponseDto> Verifications { get; set; } = new();
     }
 
@@ -49,5 +50,18 @@ namespace PaymentsAPI.DTOs
         public string EmployeeName { get; set; } = null!;
         public DateTime VerifiedAt { get; set; }
         public string Action { get; set; } = null!;
+    }
+
+    public class PaymentStatisticsDto
+    {
+        public int TotalPayments { get; set; }
+        public int PendingPayments { get; set; }
+        public int VerifiedPayments { get; set; }
+        public int RejectedPayments { get; set; }
+        public int SubmittedPayments { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal PendingAmount { get; set; }
+        public decimal VerifiedAmount { get; set; }
+        public decimal SubmittedAmount { get; set; }
     }
 }

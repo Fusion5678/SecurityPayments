@@ -66,9 +66,21 @@ namespace PaymentsAPI.Controllers
         }
 
         /// <summary>
+        /// Get all payments (for employees and admins)
+        /// </summary>
+        [HttpGet("all")]
+        [Authorize(Roles = "Employee,Admin")]
+        public async Task<ActionResult<IEnumerable<PaymentResponseDto>>> GetAllPayments([FromQuery] string? status = null)
+        {
+            var payments = await _paymentService.GetAllPaymentsAsync(status);
+            return Ok(payments);
+        }
+
+        /// <summary>
         /// Verify a payment (for employees)
         /// </summary>
         [HttpPost("{id}/verify")]
+        [Authorize(Roles = "Employee,Admin")]
         public async Task<IActionResult> VerifyPayment(int id, [FromBody] PaymentVerificationDto verificationDto)
         {
             try
@@ -87,6 +99,42 @@ namespace PaymentsAPI.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Submit a verified payment (for employees)
+        /// </summary>
+        [HttpPost("{id}/submit")]
+        [Authorize(Roles = "Employee,Admin")]
+        public async Task<IActionResult> SubmitPayment(int id)
+        {
+            try
+            {
+                var employeeId = GetCurrentUserId();
+                var result = await _paymentService.SubmitPaymentAsync(id, employeeId);
+                
+                if (!result)
+                {
+                    return NotFound(new { message = "Payment not found or cannot be submitted" });
+                }
+
+                return Ok(new { message = "Payment submitted successfully" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get payment statistics (for employees and admins)
+        /// </summary>
+        [HttpGet("statistics")]
+        [Authorize(Roles = "Employee,Admin")]
+        public async Task<ActionResult<PaymentStatisticsDto>> GetPaymentStatistics()
+        {
+            var statistics = await _paymentService.GetPaymentStatisticsAsync();
+            return Ok(statistics);
         }
 
         private int GetCurrentUserId()

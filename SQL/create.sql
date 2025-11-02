@@ -64,7 +64,7 @@ CREATE TABLE Payments (
     PayeeAccount    VARCHAR(50) NOT NULL,
     PayeeSwiftCode  VARCHAR(20) NOT NULL,
     Status          VARCHAR(20) DEFAULT 'Pending' 
-                   CHECK (Status IN ('Pending','Verified','Submitted')),
+                   CHECK (Status IN ('Pending','Verified','Submitted','Rejected')),
     CreatedAt       DATETIME DEFAULT GETDATE(),
     UpdatedAt       DATETIME DEFAULT GETDATE()
 );
@@ -77,6 +77,6 @@ CREATE TABLE PaymentVerifications (
     PaymentID        INT NOT NULL REFERENCES Payments(PaymentID),
     EmployeeID       INT NOT NULL REFERENCES Users(UserID),
     VerifiedAt       DATETIME DEFAULT GETDATE(),
-    Action           VARCHAR(20) NOT NULL CHECK (Action IN ('Verified','Rejected'))
+    Action           VARCHAR(20) NOT NULL CHECK (Action IN ('Verified','Rejected','Submitted'))
 );
 

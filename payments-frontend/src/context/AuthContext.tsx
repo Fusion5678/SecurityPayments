@@ -34,9 +34,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log('Checking authentication...');
         const userData = await authAPI.getCurrentUser();
+        console.log('Current user data:', userData);
         setUser(userData);
       } catch (error) {
+        console.log('User not authenticated:', error);
         // User is not authenticated - this is normal for unauthenticated users
         setUser(null);
       } finally {
@@ -50,8 +53,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string): Promise<void> => {
     try {
       const userData = await authAPI.login({ username, password });
+      console.log('Login successful, user data:', userData);
       setUser(userData);
     } catch (error) {
+      console.log('Login failed:', error);
       throw error;
     }
   };

@@ -48,18 +48,43 @@ const Navbar: React.FC = () => {
               </div>
               
               <div className="flex items-center space-x-2">
-                <Link
-                  to="/dashboard"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/create-payment"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  New Payment
-                </Link>
+                {/* Role-based navigation */}
+                {user.role === 'Employee' || user.role === 'Admin' ? (
+                  <Link
+                    to="/employee-dashboard"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Employee Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/create-payment"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      New Payment
+                    </Link>
+                    <Link
+                      to="/payments"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      My Payments
+                    </Link>
+                    <Link
+                      to="/bank-accounts"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Bank Accounts
+                    </Link>
+                  </>
+                )}
+                
                 <Link
                   to="/profile"
                   className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"

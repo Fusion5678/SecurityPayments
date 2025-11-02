@@ -48,5 +48,6 @@ For detailed information on implemented security measures, please see SECURITY.m
 
 ## Implementation Status
 
--**Currently Implemented**: Customer Portal with registration, login, bank account management, profile management, payment creation
--**Still to be Implemented**: Employee portal
+-**Currently Implemented**: 
+  - Customer Portal with registration, login, bank account management, profile management, payment creation and tracking
+  - Employee Portal with transaction review, payment verification (approve/reject), SWIFT submission, and statistics dashboard

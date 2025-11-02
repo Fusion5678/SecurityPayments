@@ -1,6 +1,5 @@
 # Payments Project – Security Report
 
-> **Note:** This report describes the security measures currently implemented. It is not a final draft.
 
 This report provides an overview of the security architecture and protections implemented across the Payments API (backend) and the Payments Frontend. The goal is to demonstrate how the system defends against common web application threats such as SQL injection, XSS, CSRF, and unauthorized access.
 
@@ -306,7 +305,8 @@ By combining these measures, the system is protected against:
 - **Cross-Site Request Forgery (CSRF)** → mitigated with anti-forgery tokens + X-Requested-With headers
 - **Session Hijacking** → mitigated by HttpOnly/Secure cookies, JWT expiration
 - **Man-in-the-Middle (MITM)** → prevented by HTTPS + HSTS + protocol downgrade protection + valid SSL certificates
-- **Unauthorized Access** → blocked by `[Authorize]` attributes + frontend route guards
+- **Unauthorized Access** → blocked by `[Authorize]` attributes + frontend route guards + role-based access control
+- **Privilege Escalation** → prevented by role validation at multiple layers (claims, controllers, routes)
 - **Clickjacking** → prevented by CSP frame-ancestors 'none'
 - **MIME Sniffing** → prevented by X-Content-Type-Options nosniff
 - **Information Disclosure** → prevented by error message sanitization and no-referrer policy
@@ -315,7 +315,30 @@ By combining these measures, the system is protected against:
 - **Brute Force Attacks** → mitigated by rate limiting (5 login attempts/minute, 3 registration attempts/minute)
 - **DDoS Attacks** → mitigated by global rate limiting (100 requests/minute per IP)
 
-## 10. Conclusion
+## 10. Role-Based Access Control (RBAC)
+
+The Payments Portal implements role-based access control to ensure users only access appropriate features:
+
+### Roles
+- **Customer**: Register, create payments, manage bank accounts, view own payment history
+- **Employee**: Verify payments, submit to SWIFT, view all transactions and statistics (cannot create payments or access customer features)
+
+### Backend Implementation
+- Role information stored in database and embedded in JWT claims within HttpOnly cookies
+- `[Authorize(Roles = "Employee,Admin")]` attributes on sensitive API endpoints
+- Server-side role validation on all protected endpoints
+
+### Frontend Implementation
+- ProtectedRoute component validates role before rendering
+- Role-based navigation menus and dashboard redirects
+- Admin role has full access to all features
+
+### Security Benefits
+- **Privilege Escalation Prevention**: Multi-layer role validation prevents unauthorized access
+- **Customer Data Isolation**: Customers restricted to their own payment data
+- **Server-Side Enforcement**: Backend authorization ignores client-side manipulation
+
+## 11. Conclusion
 
 The Payments Project implements a comprehensive, defense-in-depth security architecture with production-grade protections across both backend and frontend. The system features:
 
@@ -343,4 +366,4 @@ The Payments Project implements a comprehensive, defense-in-depth security archi
 - **Encrypted Database Connection**: Secure, encrypted connection between application and database
 - **HTTPS Enforcement**: Automatic HTTPS redirection and secure communication
 
-The project is well-prepared to resist common web application attacks including SQL injection, XSS, CSRF, session hijacking, MITM attacks, and DDoS attempts, while safeguarding sensitive payment data in a production environment. The comprehensive security scanning and Azure cloud security features provide enterprise-grade protection with continuous monitoring and automated threat detection.
+The project is well-prepared to resist common web application attacks including SQL injection, XSS, CSRF, session hijacking, MITM attacks, DDoS attempts, and privilege escalation, while safeguarding sensitive payment data in a production environment. The comprehensive role-based access control system ensures that users only have access to appropriate features and data based on their role (Customer, Employee, or Admin). The comprehensive security scanning and Azure cloud security features provide enterprise-grade protection with continuous monitoring and automated threat detection.

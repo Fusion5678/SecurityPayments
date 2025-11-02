@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import HomeRedirect from './components/HomeRedirect';
 import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import EmployeeDashboardPage from './pages/EmployeeDashboardPage';
 import CreatePaymentPage from './pages/CreatePaymentPage';
 import PaymentsPage from './pages/PaymentsPage';
 import BankAccountsPage from './pages/BankAccountsPage';
@@ -27,25 +29,31 @@ const App: React.FC = () => {
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="Customer">
                   <DashboardPage />
                 </ProtectedRoute>
               } />
               
+              <Route path="/employee-dashboard" element={
+                <ProtectedRoute requiredRole="Employee">
+                  <EmployeeDashboardPage />
+                </ProtectedRoute>
+              } />
+              
               <Route path="/create-payment" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="Customer">
                   <CreatePaymentPage />
                 </ProtectedRoute>
               } />
               
               <Route path="/payments" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="Customer">
                   <PaymentsPage />
                 </ProtectedRoute>
               } />
               
               <Route path="/bank-accounts" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="Customer">
                   <BankAccountsPage />
                 </ProtectedRoute>
               } />
@@ -56,8 +64,8 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } />
               
-              {/* Root route - redirect to dashboard if authenticated, login if not */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              {/* Root route - redirect based on user role */}
+              <Route path="/" element={<HomeRedirect />} />
               
               {/* Catch all route - redirect to login */}
               <Route path="*" element={<Navigate to="/login" replace />} />

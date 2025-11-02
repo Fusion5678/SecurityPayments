@@ -60,11 +60,20 @@ namespace PaymentsAPI.Services
 
         public async Task<UserResponseDto?> LoginAsync(UserLoginDto loginDto)
         {
+            Console.WriteLine($"Login attempt for username: {loginDto.Username}");
+            
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
 
+            Console.WriteLine($"User found: {user != null}, Role: {user?.Role}");
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            {
+                Console.WriteLine("Login failed - user not found or password incorrect");
                 return null;
+            }
+
+            Console.WriteLine($"Login successful for user: {user.Username} with role: {user.Role}");
 
             // Sign in the user
             await SignInUserAsync(user);
@@ -80,7 +89,7 @@ namespace PaymentsAPI.Services
                 new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim("Role", user.Role),
+                new Claim(ClaimTypes.Role, user.Role),
                 new Claim("FullName", user.FullName)
             };
 

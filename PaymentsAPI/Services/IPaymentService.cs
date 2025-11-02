@@ -8,5 +8,8 @@ namespace PaymentsAPI.Services
         Task<IEnumerable<PaymentResponseDto>> GetUserPaymentsAsync(int userId);
         Task<PaymentResponseDto?> GetPaymentAsync(int userId, int paymentId);
         Task<bool> VerifyPaymentAsync(int paymentId, int employeeId, string action);
+        Task<IEnumerable<PaymentResponseDto>> GetAllPaymentsAsync(string? status = null);
+        Task<bool> SubmitPaymentAsync(int paymentId, int employeeId);
+        Task<PaymentStatisticsDto> GetPaymentStatisticsAsync();
     }
 }
