@@ -69,6 +69,7 @@ namespace PaymentsAPI.Controllers
         /// Update a bank account
         /// </summary>
         [HttpPut("{id}")]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult<BankAccountResponseDto>> UpdateBankAccount(int id, [FromBody] BankAccountUpdateDto updateDto)
         {
             try
@@ -93,6 +94,7 @@ namespace PaymentsAPI.Controllers
         /// Delete a bank account
         /// </summary>
         [HttpDelete("{id}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteBankAccount(int id)
         {
             try

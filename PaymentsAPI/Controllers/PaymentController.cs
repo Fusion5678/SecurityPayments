@@ -80,6 +80,7 @@ namespace PaymentsAPI.Controllers
         /// Verify a payment (for employees)
         /// </summary>
         [HttpPost("{id}/verify")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Employee,Admin")]
         public async Task<IActionResult> VerifyPayment(int id, [FromBody] PaymentVerificationDto verificationDto)
         {
@@ -105,6 +106,7 @@ namespace PaymentsAPI.Controllers
         /// Submit a verified payment (for employees)
         /// </summary>
         [HttpPost("{id}/submit")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Employee,Admin")]
         public async Task<IActionResult> SubmitPayment(int id)
         {

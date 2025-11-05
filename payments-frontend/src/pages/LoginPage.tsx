@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { sanitizeInput } from '../utils/validation';
@@ -10,9 +10,8 @@ interface FormData {
 }
 
 const LoginPage: React.FC = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const { addNotification } = useNotification();
-  const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -21,10 +20,27 @@ const LoginPage: React.FC = () => {
   });
 
   // Get the intended destination from location state
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname;
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users based on their role
   if (isAuthenticated) {
+    // If coming from a protected route, only redirect back if user has access
+    if (from) {
+      // Employee routes
+      const isEmployeeRoute = from.startsWith('/employee');
+      if (isEmployeeRoute && (user?.role === 'Employee' || user?.role === 'Admin')) {
+        return <Navigate to={from} replace />;
+      }
+      // Customer routes
+      if (!isEmployeeRoute && user?.role === 'Customer') {
+        return <Navigate to={from} replace />;
+      }
+      // User doesn't have access to the protected route they came from
+    }
+    // Otherwise redirect based on role
+    if (user?.role === 'Employee' || user?.role === 'Admin') {
+      return <Navigate to="/employee-dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -59,7 +75,8 @@ const LoginPage: React.FC = () => {
         title: 'Login Successful',
         message: 'Welcome back! Redirecting to dashboard...'
       });
-      navigate(from, { replace: true });
+      
+      // Login sets user state, which triggers the redirect at the top of the component
     } catch (error: any) {
       addNotification({
         type: 'error',

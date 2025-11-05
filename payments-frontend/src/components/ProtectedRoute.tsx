@@ -11,16 +11,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
-  // Debug logging
-  console.log('ProtectedRoute Debug:', {
-    isAuthenticated,
-    loading,
-    userRole: user?.role,
-    requiredRole,
-    user: user,
-    pathname: location.pathname
-  });
-
   // Show loading spinner while checking authentication
   if (loading) {
     return (
@@ -37,17 +27,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
 
   // Check role-based access
   if (requiredRole) {
-    console.log('Role check:', {
-      userRole: user?.role,
-      requiredRole,
-      isExactMatch: user?.role === requiredRole,
-      isAdmin: user?.role === 'Admin',
-      shouldDeny: user?.role !== requiredRole && user?.role !== 'Admin'
-    });
-    
     // Allow Admin to access all pages
     if (user?.role !== requiredRole && user?.role !== 'Admin') {
-      console.log('Access denied - role mismatch');
       return (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">

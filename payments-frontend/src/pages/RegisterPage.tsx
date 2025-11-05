@@ -31,16 +31,18 @@ interface FormErrors {
 }
 
 const RegisterPage: React.FC = () => {
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated, user } = useAuth();
   const { addNotification } = useNotification();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users based on their role
   if (isAuthenticated) {
+    if (user?.role === 'Employee' || user?.role === 'Admin') {
+      return <Navigate to="/employee-dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     username: '',
